@@ -428,7 +428,7 @@ function ChatApp({ user, onLogout }) {
     const nh = [...history, { role:"user", content:text }];
     setHistory(nh);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", { method:"POST", headers:{ "Content-Type":"application/json", "x-api-key":"sk-ant-api03-6AAmOvKyb0Ukt5HvBTNlmhz6jS3M6j20rOMiZ11N7c_bmiifp1XcHzvkNMg67x9T0HrgYF4pXtbA-zKgCBJAHQ-EY9uQQAA", "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" }, body:JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2500, system:AI_SYSTEM, messages:nh }) });
+      const res = await fetch("https://api.anthropic.com/v1/messages", { method:"POST", headers:{ "Content-Type":"application/json", "x-api-key":"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", "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" }, body:JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2500, system:AI_SYSTEM, messages:nh }) });
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
       const full = data.content.map(b => b.text||"").join("");
