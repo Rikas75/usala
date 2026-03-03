@@ -31,513 +31,67 @@ const ADMIN_EMAILS = ["rikaspalos@gmail.com"];
 const TRIAL_DAYS = 15;
 const APP_VERSION = "1.0.0";
 const BUILD_DATE = "2026-03-03";
-const ACCESS_PLANS = {
-  trial:    { label: "Prueba",    icon: "⏱", color: "#FFCC02" },
-  monthly:  { label: "Mensual",   icon: "📅", color: "#4FC3F7" },
-  lifetime: { label: "Vitalicio", icon: "♾", color: "#A5D6A7" },
-};
+const ACCESS_PLANS = { trial:{label:"Prueba",icon:"⏱",color:"#FFCC02"}, monthly:{label:"Mensual",icon:"📅",color:"#4FC3F7"}, lifetime:{label:"Vitalicio",icon:"♾",color:"#A5D6A7"} };
 const QUICK_PROMPTS = [
-  { icon: "◈", label: "K-Means", color: "#4FC3F7", prompt: "Implementa K-Means clustering en Python paso a paso" },
-  { icon: "◉", label: "Red Neuronal", color: "#CE93D8", prompt: "Crea una red neuronal desde cero en Python" },
-  { icon: "◆", label: "Backprop", color: "#80CBC4", prompt: "Implementa backpropagation desde cero en Python" },
-  { icon: "◇", label: "Decision Tree", color: "#A5D6A7", prompt: "Genera un árbol de decisión robusto en Python" },
-  { icon: "◎", label: "Q-Learning", color: "#FFCC02", prompt: "Algoritmo Q-Learning para reinforcement learning en Python" },
-  { icon: "◐", label: "CNN", color: "#FF8A65", prompt: "Crea una red neuronal convolucional CNN en Python" },
-  { icon: "◑", label: "Regresión", color: "#F48FB1", prompt: "Implementa regresión lineal desde cero en Python" },
-  { icon: "◒", label: "SVM", color: "#B39DDB", prompt: "Implementa un Support Vector Machine en Python" },
+  {icon:"◈",label:"K-Means",color:"#4FC3F7",prompt:"Implementa K-Means clustering en Python paso a paso"},
+  {icon:"◉",label:"Red Neuronal",color:"#CE93D8",prompt:"Crea una red neuronal desde cero en Python"},
+  {icon:"◆",label:"Backprop",color:"#80CBC4",prompt:"Implementa backpropagation desde cero en Python"},
+  {icon:"◇",label:"Decision Tree",color:"#A5D6A7",prompt:"Genera un árbol de decisión robusto en Python"},
+  {icon:"◎",label:"Q-Learning",color:"#FFCC02",prompt:"Algoritmo Q-Learning para reinforcement learning en Python"},
+  {icon:"◐",label:"CNN",color:"#FF8A65",prompt:"Crea una red neuronal convolucional CNN en Python"},
+  {icon:"◑",label:"Regresión",color:"#F48FB1",prompt:"Implementa regresión lineal desde cero en Python"},
+  {icon:"◒",label:"SVM",color:"#B39DDB",prompt:"Implementa un Support Vector Machine en Python"},
 ];
-const AI_SYSTEM = `Eres un experto en algoritmos de inteligencia artificial y Python.
-Responde SIEMPRE en este formato exacto:
----CODE---
-[código Python completo, comentado en español, con ejemplo de uso al final con if __name__=="__main__"]
----EXPLANATION---
-[explicación clara y concisa: qué hace, cómo funciona, complejidad, usos reales]
----END---`;
+const AI_SYSTEM = `Eres un experto en algoritmos de inteligencia artificial y Python.\nResponde SIEMPRE en este formato exacto:\n---CODE---\n[código Python completo, comentado en español, con ejemplo de uso al final con if __name__=="__main__"]\n---EXPLANATION---\n[explicación clara y concisa: qué hace, cómo funciona, complejidad, usos reales]\n---END---`;
 const DB = {
-  users: () => JSON.parse(localStorage.getItem("nx_users") || "{}"),
-  saveUsers: u => localStorage.setItem("nx_users", JSON.stringify(u)),
-  session: () => JSON.parse(localStorage.getItem("nx_session") || "null"),
-  saveSession: s => localStorage.setItem("nx_session", JSON.stringify(s)),
-  clearSession: () => localStorage.removeItem("nx_session"),
-  brand: () => JSON.parse(localStorage.getItem("nx_brand") || JSON.stringify({
-    name: "USALA", sub: "AI STUDIO", accent: "#4FC3F7", accent2: "#CE93D8", logo: "⬡",
-    version: "1.0.0", buildDate: "2026-03-03"
-  })),
-  saveBrand: b => localStorage.setItem("nx_brand", JSON.stringify(b)),
+  users:()=>JSON.parse(localStorage.getItem("nx_users")||"{}"),
+  saveUsers:u=>localStorage.setItem("nx_users",JSON.stringify(u)),
+  session:()=>JSON.parse(localStorage.getItem("nx_session")||"null"),
+  saveSession:s=>localStorage.setItem("nx_session",JSON.stringify(s)),
+  clearSession:()=>localStorage.removeItem("nx_session"),
+  brand:()=>JSON.parse(localStorage.getItem("nx_brand")||JSON.stringify({name:"USALA",sub:"AI STUDIO",accent:"#4FC3F7",accent2:"#CE93D8",logo:"⬡",version:"1.0.0",buildDate:"2026-03-03"})),
+  saveBrand:b=>localStorage.setItem("nx_brand",JSON.stringify(b)),
 };
-const getDaysLeft = (user) => {
-  if (!user || user.role === "admin") return Infinity;
-  if (user.plan === "lifetime") return Infinity;
-  if (user.plan === "monthly" && user.planMonths && user.approvedAt) {
-    const totalDays = user.planMonths * 30;
-    const elapsed = Math.floor((Date.now() - new Date(user.approvedAt)) / 86400000);
-    return totalDays - elapsed;
-  }
-  if (!user.approvedAt) return 0;
-  return TRIAL_DAYS - Math.floor((Date.now() - new Date(user.approvedAt)) / 86400000);
-};
-const isAccessActive = (user) => {
-  if (!user) return false;
-  if (user.role === "admin") return true;
-  if (user.plan === "lifetime") return true;
-  return getDaysLeft(user) > 0;
-};
-const getPlanLabel = (user) => {
-  if (!user) return "";
-  if (user.plan === "lifetime") return "♾ Vitalicio";
-  if (user.plan === "monthly") return `📅 ${user.planMonths}m`;
-  return `⏱ ${Math.max(0, getDaysLeft(user))}d`;
-};
-const G = {
-  bg: "#050812", glass: "rgba(255,255,255,0.04)", glassBorder: "rgba(255,255,255,0.08)",
-  glassHover: "rgba(255,255,255,0.07)", text: "#E8EEFF", dim: "rgba(232,238,255,0.35)",
-  dim2: "rgba(232,238,255,0.12)", font: "'Outfit', sans-serif", mono: "'JetBrains Mono', monospace",
-};
-function GlassCard({ children, style, onClick }) {
-  return <div onClick={onClick} style={{ background: G.glass, border: `1px solid ${G.glassBorder}`, borderRadius: 20, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", ...style }}>{children}</div>;
-}
-function NeonButton({ children, onClick, color = "#4FC3F7", full = false, ghost = false, small = false, style = {} }) {
-  const [pressed, setPressed] = useState(false);
-  return <button onPointerDown={() => setPressed(true)} onPointerUp={() => setPressed(false)} onPointerLeave={() => setPressed(false)} onClick={onClick} style={{ width: full ? "100%" : "auto", padding: small ? "8px 16px" : "14px 24px", border: ghost ? `1px solid ${color}55` : "none", borderRadius: 14, background: ghost ? `${color}10` : `linear-gradient(135deg, ${color}dd, ${color}88)`, color: ghost ? color : "#050812", fontFamily: G.font, fontWeight: 700, fontSize: small ? "0.78rem" : "0.9rem", cursor: "pointer", transform: pressed ? "scale(0.97)" : "scale(1)", transition: "all 0.15s cubic-bezier(0.34,1.56,0.64,1)", boxShadow: ghost ? "none" : `0 0 24px ${color}44`, letterSpacing: "0.02em", ...style }}>{children}</button>;
-}
-function Input({ placeholder, value, onChange, type = "text", onEnter, icon }) {
-  const [focused, setFocused] = useState(false);
-  const brand = DB.brand();
-  return <div style={{ position: "relative", marginBottom: 12 }}>{icon && <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: focused ? brand.accent : G.dim, fontSize: "1rem", transition: "color 0.2s", pointerEvents: "none" }}>{icon}</div>}<input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onKeyDown={e => e.key === "Enter" && onEnter?.()} style={{ width: "100%", padding: icon ? "14px 16px 14px 44px" : "14px 18px", background: focused ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)", border: `1px solid ${focused ? brand.accent + "66" : G.glassBorder}`, borderRadius: 14, fontFamily: G.font, fontSize: "0.9rem", color: G.text, outline: "none", transition: "all 0.2s", boxSizing: "border-box", boxShadow: focused ? `0 0 0 3px ${brand.accent}18` : "none" }} /></div>;
-}
-function Pill({ children, color, active, onClick }) {
-  const [pressed, setPressed] = useState(false);
-  return <button onPointerDown={() => setPressed(true)} onPointerUp={() => setPressed(false)} onPointerLeave={() => setPressed(false)} onClick={onClick} style={{ padding: "8px 16px", borderRadius: 50, border: `1px solid ${active ? color + "88" : G.glassBorder}`, background: active ? `${color}22` : G.glass, color: active ? color : G.dim, fontFamily: G.font, fontSize: "0.78rem", fontWeight: active ? 600 : 400, cursor: "pointer", whiteSpace: "nowrap", transform: pressed ? "scale(0.95)" : "scale(1)", transition: "all 0.15s", flexShrink: 0 }}>{children}</button>;
-}
-function AmbientBg({ accent, accent2 }) {
-  return <div style={{ position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}><div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", background: `radial-gradient(circle, ${accent}18 0%, transparent 70%)`, top: -100, right: -100, animation: "float1 8s ease-in-out infinite" }} /><div style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", background: `radial-gradient(circle, ${accent2}14 0%, transparent 70%)`, bottom: 100, left: -80, animation: "float2 10s ease-in-out infinite" }} /><div style={{ position: "absolute", width: 200, height: 200, borderRadius: "50%", background: `radial-gradient(circle, ${accent}0e 0%, transparent 70%)`, bottom: -50, right: 100, animation: "float3 7s ease-in-out infinite" }} /><div style={{ position: "absolute", inset: 0, backgroundImage: `radial-gradient(${accent}08 1px, transparent 1px)`, backgroundSize: "32px 32px" }} /><style>{`@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,20px)}}@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}@keyframes float3{0%,100%{transform:translate(0,0)}50%{transform:translate(-10px,-15px)}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes scaleIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}@keyframes float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-6px)}}*{-webkit-tap-highlight-color:transparent;box-sizing:border-box;}::-webkit-scrollbar{width:0;}input::placeholder{color:rgba(232,238,255,0.25);}select{-webkit-appearance:none;}`}</style></div>;
-}function LoginScreen({ onAuth }) {
-  const brand = DB.brand();
-  const [mode, setMode] = useState("login");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
-  const [err, setErr] = useState("");
-  const [ok, setOk] = useState("");
-  const [loading, setLoading] = useState(false);
-  async function submit() {
-    setErr(""); setOk("");
-    setLoading(true);
-    await new Promise(r => setTimeout(r, 600));
-    const users = DB.users();
-    if (mode === "register") {
-      if (!name || !email || !pass) { setErr("Completa todos los campos"); setLoading(false); return; }
-      if (pass.length < 6) { setErr("Contraseña mínimo 6 caracteres"); setLoading(false); return; }
-      if (users[email]) { setErr("Este email ya existe"); setLoading(false); return; }
-      const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
-      users[email] = { name, email, pass, role: isAdmin ? "admin" : "user", status: isAdmin ? "approved" : "pending", plan: isAdmin ? "lifetime" : "trial", planMonths: null, registeredAt: new Date().toISOString(), approvedAt: isAdmin ? new Date().toISOString() : null };
-      DB.saveUsers(users);
-      setOk("✓ Cuenta creada exitosamente");
-      setTimeout(() => { setMode("login"); setOk(""); }, 1800);
-    } else {
-      const u = users[email.toLowerCase()] || users[email];
-      if (!u) { setErr("Email no encontrado"); setLoading(false); return; }
-      if (u.pass !== pass) { setErr("Contraseña incorrecta"); setLoading(false); return; }
-      if (u.status === "pending") { setErr("Cuenta pendiente de aprobación"); setLoading(false); return; }
-      if (u.status === "rejected") { setErr("Acceso rechazado"); setLoading(false); return; }
-      if (u.role !== "admin" && !isAccessActive(u)) { setErr("Tu período de acceso ha vencido. Contacta al administrador."); setLoading(false); return; }
-      DB.saveSession(u); onAuth(u);
-    }
-    setLoading(false);
-  }
-  return (
-    <div style={{ minHeight: "100vh", background: G.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", fontFamily: G.font, position: "relative", overflow: "hidden" }}>
-      <AmbientBg accent={brand.accent} accent2={brand.accent2} />
-      <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 400, animation: "scaleIn 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 20, filter: `drop-shadow(0 0 24px ${brand.accent}55) drop-shadow(0 0 48px ${brand.accent2}33)`, animation: "float 4s ease-in-out infinite" }}>
-            <svg width="110" height="110" viewBox="0 0 140 140" fill="none">
-              <defs>
-                <linearGradient id="lgS" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={brand.accent}/><stop offset="100%" stopColor={brand.accent2}/></linearGradient>
-                <linearGradient id="lgF" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={brand.accent} stopOpacity="0.22"/><stop offset="100%" stopColor={brand.accent2} stopOpacity="0.12"/></linearGradient>
-                <linearGradient id="lgU" x1="0%" y1="0%" x2="10%" y2="100%"><stop offset="0%" stopColor="#ffffff"/><stop offset="50%" stopColor="#b8e4ff"/><stop offset="100%" stopColor="rgba(255,255,255,0.88)"/></linearGradient>
-                <filter id="lgGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-                <filter id="lgDot"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-              </defs>
-              <polygon points="70,5 123,34 123,106 70,135 17,106 17,34" fill="none" stroke="url(#lgS)" strokeWidth="0.5" strokeOpacity="0.18"/>
-              <polygon points="70,17 115,42 115,98 70,123 25,98 25,42" fill="url(#lgF)" stroke="url(#lgS)" strokeWidth="1.75" filter="url(#lgGlow)"/>
-              <polygon points="70,30 104,49 104,91 70,110 36,91 36,49" fill="url(#lgF)" stroke="url(#lgS)" strokeWidth="0.5" strokeOpacity="0.35"/>
-              <path d="M50 38 L50 77 Q50 97 70 97 Q90 97 90 77 L90 38" fill="none" stroke="url(#lgU)" strokeWidth="10" strokeLinecap="round" filter="url(#lgGlow)"/>
-              <circle cx="98" cy="33" r="6.5" fill={brand.accent} filter="url(#lgDot)"/>
-              <circle cx="98" cy="33" r="3" fill="white"/>
-            </svg>
-          </div>
-          <div style={{ fontFamily: G.font, fontWeight: 900, letterSpacing: "0.16em", lineHeight: 1, fontSize: "clamp(3rem, 20vw, 4.2rem)", background: `linear-gradient(135deg, #ffffff 0%, #a8d8ff 30%, ${brand.accent} 52%, ${brand.accent2} 78%, #ffffff 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", filter: `drop-shadow(0 0 28px ${brand.accent}55) drop-shadow(0 0 56px ${brand.accent2}33)` }}>{brand.name}</div>
-          <div style={{ width: 50, height: 2, background: `linear-gradient(90deg,${brand.accent},${brand.accent2})`, borderRadius: 2, margin: "10px auto 8px", opacity: 0.7 }}/>
-          <div style={{ fontSize: "0.62rem", color: G.dim, letterSpacing: "0.42em", textTransform: "uppercase" }}>{brand.sub}</div>
-        </div>
-        <GlassCard style={{ padding: 28 }}>
-          <div style={{ display: "flex", background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: 4, marginBottom: 24 }}>
-            {["login", "register"].map(m => (
-              <button key={m} onClick={() => { setMode(m); setErr(""); setOk(""); }} style={{ flex: 1, padding: "10px", border: mode === m ? `1px solid ${brand.accent}44` : "1px solid transparent", borderRadius: 10, background: mode === m ? `${brand.accent}22` : "transparent", color: mode === m ? brand.accent : G.dim, fontFamily: G.font, fontSize: "0.85rem", fontWeight: mode === m ? 700 : 400, cursor: "pointer", transition: "all 0.2s" }}>
-                {m === "login" ? "Iniciar sesión" : "Registrarse"}
-              </button>
-            ))}
-          </div>
-          {mode === "register" && <Input icon="✦" placeholder="Tu nombre completo" value={name} onChange={setName} />}
-          <Input icon="@" placeholder="correo@ejemplo.com" value={email} onChange={setEmail} type="email" />
-          <Input icon="◈" placeholder="Contraseña" value={pass} onChange={setPass} type="password" onEnter={submit} />
-          {err && <div style={{ padding: "12px 16px", background: "#ff3d6e14", border: "1px solid #ff3d6e44", borderRadius: 12, marginBottom: 16, fontSize: "0.82rem", color: "#ff3d6e", animation: "slideUp 0.3s" }}>⚠ {err}</div>}
-          {ok && <div style={{ padding: "12px 16px", background: `${brand.accent}14`, border: `1px solid ${brand.accent}44`, borderRadius: 12, marginBottom: 16, fontSize: "0.82rem", color: brand.accent, animation: "slideUp 0.3s" }}>{ok}</div>}
-          <NeonButton onClick={submit} full color={brand.accent} style={{ opacity: loading ? 0.7 : 1 }}>{loading ? "···" : mode === "login" ? "Entrar →" : "Crear cuenta →"}</NeonButton>
-          {mode === "register" && <div style={{ marginTop: 16, padding: "12px 16px", background: `${brand.accent2}10`, border: `1px solid ${brand.accent2}28`, borderRadius: 12, fontSize: "0.75rem", color: brand.accent2, lineHeight: 1.7 }}>ℹ Tras registrarte un administrador revisará tu acceso. Tendrás <strong>{TRIAL_DAYS} días</strong> de prueba gratuita al ser aprobado.</div>}
-        </GlassCard>
-      </div>
-    </div>
-  );
-}
-function AdminUsers({ onBack }) {
-  const brand = DB.brand();
-  const [users, setUsers] = useState(DB.users());
-  const [filter, setFilter] = useState("pending");
-  const [toast, setToast] = useState("");
-  const [planModal, setPlanModal] = useState(null);
-  const [selectedPlan, setSelectedPlan] = useState("trial");
-  const [selectedMonths, setSelectedMonths] = useState(1);
-  function toast_(msg) { setToast(msg); setTimeout(() => setToast(""), 3000); }
-  function reject(email) { const u = DB.users(); u[email].status = "rejected"; DB.saveUsers(u); setUsers({ ...u }); toast_(`✗ ${u[email].name} rechazado`); }
-  function approveWithPlan(email, plan, months = null) {
-    const u = DB.users();
-    u[email].status = "approved"; u[email].plan = plan;
-    u[email].planMonths = plan === "monthly" ? months : null;
-    u[email].approvedAt = new Date().toISOString();
-    DB.saveUsers(u); setUsers({ ...u }); setPlanModal(null);
-    const labels = { trial: "15 días prueba", monthly: `${months} mes(es)`, lifetime: "acceso vitalicio" };
-    toast_(`✓ ${u[email].name} aprobado · ${labels[plan]}`);
-  }
-  function revoke(email) { const u = DB.users(); u[email].status = "rejected"; DB.saveUsers(u); setUsers({ ...u }); toast_(`⊘ Acceso revocado`); }
-  const all = Object.values(users).filter(u => u.role !== "admin");
-  const counts = { pending: all.filter(u => u.status === "pending").length, approved: all.filter(u => u.status === "approved").length, rejected: all.filter(u => u.status === "rejected").length };
-  const list = filter === "all" ? all : all.filter(u => u.status === filter);
-  const sColor = { pending: "#FFCC02", approved: brand.accent, rejected: "#ff3d6e" };
-  function accessInfo(u) {
-    if (u.plan === "lifetime") return { label: "♾ Vitalicio", color: "#A5D6A7", pct: 100 };
-    if (u.plan === "monthly" && u.approvedAt) { const total = (u.planMonths || 1) * 30; const dl = getDaysLeft(u); const pct = Math.max(0, (dl / total) * 100); return { label: dl > 0 ? `📅 ${dl} días restantes` : "⚠ Vencido", color: dl <= 5 ? "#ff3d6e" : brand.accent, pct }; }
-    if (u.approvedAt) { const dl = getDaysLeft(u); const pct = Math.max(0, (dl / TRIAL_DAYS) * 100); return { label: dl > 0 ? `⏱ ${dl} días prueba` : "⚠ Prueba vencida", color: dl <= 3 ? "#ff3d6e" : "#FFCC02", pct }; }
-    return { label: "Sin activar", color: G.dim, pct: 0 };
-  }
-  return (
-    <div style={{ minHeight: "100vh", background: G.bg, fontFamily: G.font, color: G.text, position: "relative" }}>
-      <AmbientBg accent={brand.accent} accent2={brand.accent2} />
-      <div style={{ position: "relative", zIndex: 1 }}>
-        <div style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 14, borderBottom: `1px solid ${G.glassBorder}` }}>
-          <button onClick={onBack} style={{ width: 36, height: 36, borderRadius: 12, background: G.glass, border: `1px solid ${G.glassBorder}`, color: G.text, fontSize: "1rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>←</button>
-          <div><div style={{ fontWeight: 700, fontSize: "1.1rem" }}>Gestión de usuarios</div><div style={{ fontSize: "0.65rem", color: G.dim, marginTop: 1 }}>USALA v{APP_VERSION}</div></div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, padding: "16px 20px" }}>
-          {[["Pendientes", counts.pending, "#FFCC02"], ["Activos", counts.approved, brand.accent], ["Rechazados", counts.rejected, "#ff3d6e"]].map(([l, v, c]) => (
-            <GlassCard key={l} style={{ padding: "16px 10px", textAlign: "center" }}><div style={{ fontSize: "1.8rem", fontWeight: 900, color: c, lineHeight: 1 }}>{v}</div><div style={{ fontSize: "0.62rem", color: G.dim, marginTop: 6, letterSpacing: "0.05em" }}>{l.toUpperCase()}</div></GlassCard>
-          ))}
-        </div>
-        <div style={{ display: "flex", gap: 8, padding: "0 20px 16px", overflowX: "auto" }}>
-          {[["pending","Pendientes","#FFCC02"],["approved","Activos",brand.accent],["rejected","Rechazados","#ff3d6e"],["all","Todos",G.dim]].map(([f,l,c]) => (
-            <Pill key={f} active={filter===f} color={c} onClick={() => setFilter(f)}>{l}</Pill>
-          ))}
-        </div>
-        <div style={{ padding: "0 20px", display: "flex", flexDirection: "column", gap: 12, paddingBottom: 40 }}>
-          {list.length === 0 && <div style={{ textAlign: "center", padding: "60px 0", color: G.dim, fontSize: "0.85rem" }}>Sin usuarios en esta categoría</div>}
-          {list.map(u => { const info = accessInfo(u); return (
-            <GlassCard key={u.email} style={{ padding: 18, animation: "slideUp 0.3s" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 14, background: `${sColor[u.status]}18`, border: `1px solid ${sColor[u.status]}33`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "1rem", color: sColor[u.status] }}>{u.name[0].toUpperCase()}</div>
-                  <div><div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{u.name}</div><div style={{ fontSize: "0.7rem", color: G.dim, marginTop: 2 }}>{u.email}</div></div>
-                </div>
-                <div style={{ fontSize: "0.62rem", padding: "4px 10px", borderRadius: 50, background: `${sColor[u.status]}15`, border: `1px solid ${sColor[u.status]}33`, color: sColor[u.status], whiteSpace: "nowrap" }}>{u.status === "pending" ? "⏳ Pendiente" : u.status === "approved" ? "✓ Activo" : "✗ Rechazado"}</div>
-              </div>
-              {u.status === "approved" && <div style={{ marginBottom: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", marginBottom: 6 }}>
-                  <span style={{ color: G.dim }}>Plan: <span style={{ color: info.color, fontWeight: 600 }}>{u.plan === "lifetime" ? "♾ Vitalicio" : u.plan === "monthly" ? `📅 ${u.planMonths} mes(es)` : "⏱ Prueba 15 días"}</span></span>
-                  <span style={{ color: info.color, fontWeight: 600 }}>{info.label}</span>
-                </div>
-                {u.plan !== "lifetime" && <div style={{ height: 4, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}><div style={{ height: "100%", width: `${info.pct}%`, background: `linear-gradient(90deg,${info.color},${brand.accent2})`, borderRadius: 4, transition: "width 0.6s" }} /></div>}
-                {u.plan === "lifetime" && <div style={{ height: 4, borderRadius: 4, background: `linear-gradient(90deg,#A5D6A7,#4FC3F7)` }} />}
-              </div>}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {u.status === "pending" && <><NeonButton small ghost color={brand.accent} onClick={() => { setPlanModal(u.email); setSelectedPlan("trial"); setSelectedMonths(1); }}>✓ Aprobar...</NeonButton><NeonButton small ghost color="#ff3d6e" onClick={() => reject(u.email)}>✗ Rechazar</NeonButton></>}
-                {u.status === "approved" && <><NeonButton small ghost color={brand.accent} onClick={() => { setPlanModal(u.email); setSelectedPlan(u.plan || "trial"); setSelectedMonths(u.planMonths || 1); }}>✎ Cambiar plan</NeonButton><NeonButton small ghost color="#ff3d6e" onClick={() => revoke(u.email)}>⊘ Revocar</NeonButton></>}
-                {u.status === "rejected" && <NeonButton small ghost color={brand.accent} onClick={() => { setPlanModal(u.email); setSelectedPlan("trial"); setSelectedMonths(1); }}>↩ Reactivar...</NeonButton>}
-              </div>
-            </GlassCard>
-          );})}
-        </div>
-      </div>
-      {planModal && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 999 }}>
-          <div onClick={() => setPlanModal(null)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "#0a0e1e", border: `1px solid ${G.glassBorder}`, borderRadius: "24px 24px 0 0", padding: "20px 20px 50px", animation: "slideUp 0.3s" }}>
-            <div style={{ width: 40, height: 4, borderRadius: 4, background: G.glassBorder, margin: "0 auto 20px" }} />
-            <div style={{ fontWeight: 700, fontSize: "1rem", marginBottom: 6 }}>Seleccionar plan de acceso</div>
-            <div style={{ fontSize: "0.75rem", color: G.dim, marginBottom: 20 }}>{DB.users()[planModal]?.name}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-              <button onClick={() => setSelectedPlan("trial")} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: selectedPlan === "trial" ? "#FFCC0218" : G.glass, border: `1px solid ${selectedPlan === "trial" ? "#FFCC0288" : G.glassBorder}`, borderRadius: 16, cursor: "pointer", fontFamily: G.font, transition: "all 0.2s" }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: "#FFCC0218", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.3rem" }}>⏱</div>
-                <div style={{ textAlign: "left" }}><div style={{ fontWeight: 600, color: G.text, fontSize: "0.9rem" }}>Prueba gratuita</div><div style={{ fontSize: "0.72rem", color: "#FFCC02", marginTop: 2 }}>15 días de acceso</div></div>
-                {selectedPlan === "trial" && <div style={{ marginLeft: "auto", color: "#FFCC02", fontSize: "1.1rem" }}>✓</div>}
-              </button>
-              <button onClick={() => setSelectedPlan("monthly")} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: selectedPlan === "monthly" ? `${brand.accent}18` : G.glass, border: `1px solid ${selectedPlan === "monthly" ? brand.accent + "88" : G.glassBorder}`, borderRadius: 16, cursor: "pointer", fontFamily: G.font, transition: "all 0.2s" }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: `${brand.accent}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.3rem" }}>📅</div>
-                <div style={{ textAlign: "left" }}><div style={{ fontWeight: 600, color: G.text, fontSize: "0.9rem" }}>Acceso por meses</div><div style={{ fontSize: "0.72rem", color: brand.accent, marginTop: 2 }}>Define cuántos meses</div></div>
-                {selectedPlan === "monthly" && <div style={{ marginLeft: "auto", color: brand.accent, fontSize: "1.1rem" }}>✓</div>}
-              </button>
-              {selectedPlan === "monthly" && <div style={{ padding: "14px 16px", background: `${brand.accent}0a`, border: `1px solid ${brand.accent}33`, borderRadius: 14, marginTop: -4 }}>
-                <div style={{ fontSize: "0.72rem", color: G.dim, marginBottom: 10 }}>Número de meses</div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {[1, 2, 3, 6, 12, 24].map(m => <button key={m} onClick={() => setSelectedMonths(m)} style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${selectedMonths === m ? brand.accent : G.glassBorder}`, background: selectedMonths === m ? `${brand.accent}22` : "transparent", color: selectedMonths === m ? brand.accent : G.dim, fontFamily: G.font, fontSize: "0.82rem", fontWeight: selectedMonths === m ? 700 : 400, cursor: "pointer" }}>{m === 1 ? "1 mes" : m === 12 ? "1 año" : m === 24 ? "2 años" : `${m} meses`}</button>)}
-                </div>
-              </div>}
-              <button onClick={() => setSelectedPlan("lifetime")} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: selectedPlan === "lifetime" ? "#A5D6A718" : G.glass, border: `1px solid ${selectedPlan === "lifetime" ? "#A5D6A788" : G.glassBorder}`, borderRadius: 16, cursor: "pointer", fontFamily: G.font, transition: "all 0.2s" }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: "#A5D6A718", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.3rem" }}>♾</div>
-                <div style={{ textAlign: "left" }}><div style={{ fontWeight: 600, color: G.text, fontSize: "0.9rem" }}>Acceso vitalicio</div><div style={{ fontSize: "0.72rem", color: "#A5D6A7", marginTop: 2 }}>Sin fecha de expiración</div></div>
-                {selectedPlan === "lifetime" && <div style={{ marginLeft: "auto", color: "#A5D6A7", fontSize: "1.1rem" }}>✓</div>}
-              </button>
-            </div>
-            <NeonButton full color={selectedPlan === "lifetime" ? "#A5D6A7" : selectedPlan === "monthly" ? brand.accent : "#FFCC02"} onClick={() => approveWithPlan(planModal, selectedPlan, selectedMonths)}>✓ Confirmar y activar acceso</NeonButton>
-          </div>
-        </div>
-      )}
-      {toast && <div style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "rgba(5,8,18,0.95)", backdropFilter: "blur(20px)", border: `1px solid ${brand.accent}44`, color: brand.accent, padding: "12px 24px", borderRadius: 50, fontSize: "0.82rem", fontFamily: G.font, fontWeight: 600, zIndex: 998, whiteSpace: "nowrap", animation: "slideUp 0.3s" }}>{toast}</div>}
-    </div>
-  );
-        }
-  function  ({ onBack }) {
-  const [brand, setBrand] = useState(DB.brand());
-  const [tab, setTab] = useState("identity");
-  const [toast, setToast] = useState("");
-  const up = (k, v) => setBrand(p => ({ ...p, [k]: v }));
-  const toast_ = msg => { setToast(msg); setTimeout(() => setToast(""), 2500); };
-  function save() { DB.saveBrand(brand); toast_("✓ Cambios guardados"); setTimeout(() => window.location.reload(), 1200); }
-  const EMOJIS = ["◈","◉","⬡","⟡","✦","⬢","◆","★","⚡","🧠","🤖","🔮","🚀","💎","⚙️","🌐"];
-  const PRESETS = [{ name:"Cyan",a:"#4FC3F7",b:"#00B8D4"},{ name:"Lavanda",a:"#CE93D8",b:"#9C27B0"},{ name:"Verde",a:"#80CBC4",b:"#00F5A0"},{ name:"Dorado",a:"#FFCC02",b:"#FF9500"},{ name:"Rosa",a:"#F48FB1",b:"#FF3D6E"},{ name:"Naranja",a:"#FF8A65",b:"#FF5722"}];
-  const tabStyle = t => ({ flex:1, padding:"10px 4px", border:"none", background:"none", borderBottom:`2px solid ${tab===t?brand.accent:"transparent"}`, color:tab===t?brand.accent:G.dim, fontFamily:G.font, fontSize:"0.72rem", fontWeight:tab===t?700:400, cursor:"pointer", transition:"all 0.2s" });
-  const label = txt => <div style={{ fontSize:"0.68rem", color:G.dim, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:8 }}>{txt}</div>;
-  return (
-    <div style={{ minHeight:"100vh", background:G.bg, fontFamily:G.font, color:G.text, position:"relative" }}>
-      <AmbientBg accent={brand.accent} accent2={brand.accent2} />
-      <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", height:"100vh" }}>
-        <div style={{ padding:"16px 20px", display:"flex", alignItems:"center", gap:14, borderBottom:`1px solid ${G.glassBorder}`, flexShrink:0 }}>
-          <button onClick={onBack} style={{ width:36, height:36, borderRadius:12, background:G.glass, border:`1px solid ${G.glassBorder}`, color:G.text, fontSize:"1rem", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>←</button>
-          <div style={{ fontWeight:700, fontSize:"1.1rem" }}>Personalizar</div>
-        </div>
-        <div style={{ display:"flex", borderBottom:`1px solid ${G.glassBorder}`, flexShrink:0 }}>
-          {[["identity","Identidad"],["colors","Colores"],["version","Versión"],["preview","Preview"]].map(([t,l]) => (
-            <button key={t} style={tabStyle(t)} onClick={() => setTab(t)}>{l}</button>
-          ))}
-        </div>
-        <div style={{ flex:1, overflowY:"auto", padding:"20px", paddingBottom:100 }}>
-          {tab==="identity" && <>
-            {label("Nombre de la app")}
-            <input value={brand.name} onChange={e => up("name",e.target.value)} style={{ width:"100%", padding:"13px 16px", background:G.glass, border:`1px solid ${G.glassBorder}`, borderRadius:14, fontFamily:G.font, fontSize:"1rem", fontWeight:700, color:brand.accent, outline:"none", marginBottom:16 }} />
-            {label("Subtítulo")}
-            <input value={brand.sub} onChange={e => up("sub",e.target.value)} style={{ width:"100%", padding:"13px 16px", background:G.glass, border:`1px solid ${G.glassBorder}`, borderRadius:14, fontFamily:G.font, fontSize:"0.85rem", color:G.text, outline:"none", marginBottom:20 }} />
-            {label("Ícono del logo")}
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(8,1fr)", gap:8, marginBottom:20 }}>
-              {EMOJIS.map(e => <button key={e} onClick={() => up("logo",e)} style={{ aspectRatio:"1", borderRadius:12, background:brand.logo===e?`${brand.accent}22`:G.glass, border:`1px solid ${brand.logo===e?brand.accent:G.glassBorder}`, fontSize:"1.1rem", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>{e}</button>)}
-            </div>
-          </>}
-          {tab==="version" && <>
-            <div style={{ background:`${brand.accent}0e`, border:`1px solid ${brand.accent}33`, borderRadius:16, padding:"18px 20px", marginBottom:24, display:"flex", alignItems:"center", gap:16 }}>
-              <div style={{ width:48, height:48, borderRadius:14, background:`${brand.accent}18`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.4rem" }}>📦</div>
-              <div><div style={{ fontSize:"0.68rem", color:G.dim, marginBottom:4 }}>VERSIÓN ACTUAL</div><div style={{ fontFamily:G.mono, fontSize:"1.5rem", fontWeight:700, color:brand.accent }}>v{brand.version||"1.0.0"}</div><div style={{ fontSize:"0.7rem", color:G.dim, marginTop:2 }}>Build · {brand.buildDate||BUILD_DATE}</div></div>
-            </div>
-            {label("Número de versión")}
-            <div style={{ display:"flex", gap:10, marginBottom:20 }}>
-              {[0,1,2].map(i => (
-                <div key={i} style={{ flex:1, textAlign:"center" }}>
-                  <div style={{ fontSize:"0.62rem", color:G.dim, marginBottom:6 }}>{["MAYOR","MENOR","PARCHE"][i]}</div>
-                  <div style={{ display:"flex", alignItems:"center", background:G.glass, border:`1px solid ${G.glassBorder}`, borderRadius:12, overflow:"hidden" }}>
-                    <button onClick={() => { const p=(brand.version||"1.0.0").split("."); p[i]=Math.max(0,parseInt(p[i])-1); up("version",p.join(".")); }} style={{ padding:"12px 14px", background:"none", border:"none", color:G.dim, cursor:"pointer", fontSize:"1.1rem" }}>−</button>
-                    <div style={{ flex:1, textAlign:"center", fontFamily:G.mono, fontWeight:700, color:brand.accent }}>{(brand.version||"1.0.0").split(".")[i]}</div>
-                    <button onClick={() => { const p=(brand.version||"1.0.0").split("."); p[i]=parseInt(p[i])+1; up("version",p.join(".")); }} style={{ padding:"12px 14px", background:"none", border:"none", color:brand.accent, cursor:"pointer", fontSize:"1.1rem" }}>+</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {label("Fecha de actualización")}
-            <div style={{ display:"flex", gap:10, marginBottom:10 }}>
-              <input type="date" value={brand.buildDate||BUILD_DATE} onChange={e => up("buildDate",e.target.value)} style={{ flex:1, padding:"13px 16px", background:G.glass, border:`1px solid ${G.glassBorder}`, borderRadius:14, fontFamily:G.mono, fontSize:"0.85rem", color:brand.accent, outline:"none", colorScheme:"dark" }} />
-              <button onClick={() => up("buildDate",new Date().toISOString().split("T")[0])} style={{ padding:"13px 16px", background:`${brand.accent}18`, border:`1px solid ${brand.accent}44`, borderRadius:14, color:brand.accent, fontFamily:G.font, fontSize:"0.78rem", fontWeight:600, cursor:"pointer", whiteSpace:"nowrap" }}>📅 Hoy</button>
-            </div>
-          </>}
-          {tab==="colors" && <>
-            {label("Presets de color")}
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:24 }}>
-              {PRESETS.map(p => <button key={p.name} onClick={() => { up("accent",p.a); up("accent2",p.b); }} style={{ padding:"14px 10px", borderRadius:14, background:`linear-gradient(135deg,${p.a}22,${p.b}18)`, border:`1px solid ${brand.accent===p.a?p.a+"88":G.glassBorder}`, cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}><div style={{ display:"flex", gap:4 }}><div style={{ width:12, height:12, borderRadius:"50%", background:p.a }} /><div style={{ width:12, height:12, borderRadius:"50%", background:p.b }} /></div><span style={{ fontSize:"0.72rem", color:p.a, fontFamily:G.font, fontWeight:600 }}>{p.name}</span></button>)}
-            </div>
-            {label("Color principal")}
-            <div style={{ display:"flex", gap:12, alignItems:"center", marginBottom:16 }}>
-              <input type="color" value={brand.accent} onChange={e => up("accent",e.target.value)} style={{ width:52, height:44, border:"none", borderRadius:12, cursor:"pointer" }} />
-              <div style={{ flex:1, padding:"12px 16px", background:`${brand.accent}18`, border:`1px solid ${brand.accent}44`, borderRadius:12, color:brand.accent, fontFamily:G.mono, fontSize:"0.85rem" }}>{brand.accent}</div>
-            </div>
-            {label("Color secundario")}
-            <div style={{ display:"flex", gap:12, alignItems:"center" }}>
-              <input type="color" value={brand.accent2} onChange={e => up("accent2",e.target.value)} style={{ width:52, height:44, border:"none", borderRadius:12, cursor:"pointer" }} />
-              <div style={{ flex:1, padding:"12px 16px", background:`${brand.accent2}18`, border:`1px solid ${brand.accent2}44`, borderRadius:12, color:brand.accent2, fontFamily:G.mono, fontSize:"0.85rem" }}>{brand.accent2}</div>
-            </div>
-          </>}
-          {tab==="preview" && (
-            <div>
-              {label("Vista previa")}
-              <GlassCard style={{ padding:24, textAlign:"center" }}>
-                <div style={{ width:52, height:52, borderRadius:16, background:`${brand.accent}22`, border:`1px solid ${brand.accent}44`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 10px", fontSize:"1.4rem" }}>{brand.logo}</div>
-                <div style={{ fontWeight:900, fontSize:"1.3rem", color:G.text }}>{brand.name}</div>
-                <div style={{ fontSize:"0.65rem", color:G.dim, marginTop:4, marginBottom:18 }}>{brand.sub}</div>
-                <div style={{ height:36, background:G.glass, border:`1px solid ${G.glassBorder}`, borderRadius:10, marginBottom:10 }} />
-                <div style={{ height:36, background:G.glass, border:`1px solid ${G.glassBorder}`, borderRadius:10, marginBottom:14 }} />
-                <div style={{ height:42, background:`linear-gradient(135deg,${brand.accent}dd,${brand.accent2}88)`, borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, color:G.bg }}>Entrar →</div>
-              </GlassCard>
-            </div>
-          )}
-        </div>
-        <div style={{ position:"fixed", bottom:0, left:0, right:0, padding:"16px 20px", background:"rgba(5,8,18,0.95)", backdropFilter:"blur(20px)", borderTop:`1px solid ${G.glassBorder}` }}>
-          <NeonButton onClick={save} full color={brand.accent}>💾 Guardar y aplicar</NeonButton>
-        </div>
-      </div>
-      {toast && <div style={{ position:"fixed", bottom:90, left:"50%", transform:"translateX(-50%)", background:"rgba(5,8,18,0.9)", backdropFilter:"blur(20px)", border:`1px solid ${brand.accent}44`, color:brand.accent, padding:"12px 24px", borderRadius:50, fontSize:"0.82rem", fontFamily:G.font, fontWeight:600, zIndex:999, whiteSpace:"nowrap" }}>{toast}</div>}
-    </div>
-  );
-}
-function ChatApp({ user, onLogout }) {
-  const brand = DB.brand();
-  const [tab, setTab] = useState("chat");
-  const [view, setView] = useState("app");
-  const [msgs, setMsgs] = useState([{ role:"ai", text:`Hola, ${user.name.split(" ")[0]} 👋\n\nElige un algoritmo abajo o describe lo que necesitas en lenguaje natural.` }]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [code, setCode] = useState("");
-  const [expl, setExpl] = useState("");
-  const [history, setHistory] = useState([]);
-  const [copied, setCopied] = useState(false);
-  const [newBadge, setNewBadge] = useState({ code:false, expl:false });
-  const [menuOpen, setMenuOpen] = useState(false);
-  const endRef = useRef(null);
-  const dl = getDaysLeft(user);
-  const planBadge = user.role==="admin" ? { label:"⚙ Admin", color:brand.accent } : user.plan==="lifetime" ? { label:"♾ Vitalicio", color:"#A5D6A7" } : user.plan==="monthly" ? { label:`📅 ${Math.max(0,dl)}d`, color:dl<=5?"#ff3d6e":brand.accent } : { label:`⏱ ${Math.max(0,dl)}d`, color:dl<=3?"#ff3d6e":"#FFCC02" };
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs, loading]);
-  if (view==="users") return <AdminUsers onBack={() => { setView("app"); setMenuOpen(false); }} />;
-  if (view==="brand") return <BrandingPanel onBack={() => { setView("app"); setMenuOpen(false); }} />;
-  async function send(text) {
-    if (!text?.trim() || loading) return;
-    setMsgs(p => [...p, { role:"user", text }]);
-    setInput(""); setLoading(true);
-    const nh = [...history, { role:"user", content:text }];
-    setHistory(nh);
-    try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", { method:"POST", headers:{ "Content-Type":"application/json", "x-api-key":"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", "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" }, body:JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2500, system:AI_SYSTEM, messages:nh }) });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      const full = data.content.map(b => b.text||"").join("");
-      setHistory(p => [...p, { role:"assistant", content:full }]);
-      const cm = full.match(/---CODE---([\s\S]*?)---EXPLANATION---/);
-      const em = full.match(/---EXPLANATION---([\s\S]*?)---END---/);
-      if (cm) { setCode(cm[1].trim()); setNewBadge(p => ({ ...p, code:true })); }
-      if (em) { setExpl(em[1].trim()); setNewBadge(p => ({ ...p, expl:true })); }
-      setMsgs(p => [...p, { role:"ai", text:cm ? "✓ Código generado exitosamente.\n\nToca { } para ver el código Python completo, o 📖 para leer la explicación detallada." : full }]);
-    } catch(e) { setMsgs(p => [...p, { role:"ai", text:"⚠ Error de conexión: "+e.message }]); }
-    setLoading(false);
-  }
-  function hiCode(c) {
-    return c.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-      .replace(/(#[^\n]*)/g,'<span style="color:#6272a4;font-style:italic">$1</span>')
-      .replace(/\b(def|class|import|from|return|if|else|elif|for|while|in|not|and|or|True|False|None|lambda|try|except|with|as|pass|break|continue|self|yield)\b/g,'<span style="color:#ff79c6">$1</span>')
-      .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,'<span style="color:#f1fa8c">$1</span>')
-      .replace(/\b(\d+\.?\d*)\b/g,'<span style="color:#bd93f9">$1</span>')
-      .replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g,'<span style="color:#50fa7b">$1</span>');
-  }
-  const tabBtn = (t,lbl,badge) => <button onClick={() => { setTab(t); setNewBadge(p => ({ ...p, [t==="code"?"code":"expl"]:false })); }} style={{ flex:1, padding:"13px 4px", border:"none", background:"none", borderBottom:`2px solid ${tab===t?brand.accent:"transparent"}`, color:tab===t?brand.accent:G.dim, fontFamily:G.font, fontSize:"0.75rem", fontWeight:tab===t?700:400, cursor:"pointer", position:"relative" }}>{lbl}{badge && <span style={{ position:"absolute", top:8, right:"calc(50% - 20px)", width:7, height:7, borderRadius:"50%", background:brand.accent }} />}</button>;
-  return (
-    <div style={{ display:"flex", flexDirection:"column", height:"100vh", background:G.bg, color:G.text, fontFamily:G.font, overflow:"hidden", position:"relative" }}>
-      <AmbientBg accent={brand.accent} accent2={brand.accent2} />
-      <div style={{ position:"relative", zIndex:10, padding:"14px 20px", borderBottom:`1px solid ${G.glassBorder}`, display:"flex", alignItems:"center", justifyContent:"space-between", backdropFilter:"blur(20px)", background:"rgba(5,8,18,0.7)", flexShrink:0 }}>
-        <div style={{ fontWeight:900, fontSize:"1.25rem", letterSpacing:"0.12em", background:`linear-gradient(120deg,#ffffff,${brand.accent},${brand.accent2})`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>{brand.name}</div>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ fontSize:"0.65rem", padding:"5px 12px", borderRadius:50, background:`${planBadge.color}14`, border:`1px solid ${planBadge.color}44`, color:planBadge.color, fontWeight:600 }}>{planBadge.label}</div>
-          <button onClick={() => setMenuOpen(true)} style={{ width:34, height:34, borderRadius:11, background:G.glass, border:`1px solid ${G.glassBorder}`, color:G.text, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700 }}>{user.name[0].toUpperCase()}</button>
-        </div>
-      </div>
-      {menuOpen && (
-        <div style={{ position:"fixed", inset:0, zIndex:999 }}>
-          <div onClick={() => setMenuOpen(false)} style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.6)", backdropFilter:"blur(4px)" }} />
-          <div style={{ position:"absolute", bottom:0, left:0, right:0, background:"#0a0e1e", border:`1px solid ${G.glassBorder}`, borderRadius:"24px 24px 0 0", padding:"12px 20px 50px", animation:"slideUp 0.3s" }}>
-            <div style={{ width:40, height:4, borderRadius:4, background:G.glassBorder, margin:"0 auto 20px" }} />
-            <div style={{ display:"flex", alignItems:"center", gap:14, padding:"0 4px 16px", borderBottom:`1px solid ${G.glassBorder}`, marginBottom:14 }}>
-              <div style={{ width:46, height:46, borderRadius:15, background:`${brand.accent}22`, border:`1px solid ${brand.accent}44`, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, color:brand.accent, fontSize:"1.3rem" }}>{user.name[0].toUpperCase()}</div>
-              <div><div style={{ fontWeight:700, color:G.text }}>{user.name}</div><div style={{ fontSize:"0.73rem", color:G.dim }}>{user.email}</div></div>
-            </div>
-            {user.role==="admin" && <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:10 }}>
-              <button onClick={() => { setMenuOpen(false); setView("users"); }} style={{ display:"flex", alignItems:"center", gap:14, width:"100%", padding:"16px", background:`${brand.accent}0a`, border:`1px solid ${brand.accent}22`, borderRadius:16, color:G.text, fontFamily:G.font, fontSize:"0.92rem", fontWeight:600, cursor:"pointer" }}>
-                <span style={{ width:38, height:38, borderRadius:12, background:`${brand.accent}18`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.2rem" }}>👥</span>
-                <div><div>Gestionar usuarios</div><div style={{ fontSize:"0.72rem", color:G.dim, fontWeight:400 }}>Aprobar y controlar acceso</div></div>
-              </button>
-              <button onClick={() => { setMenuOpen(false); setView("brand"); }} style={{ display:"flex", alignItems:"center", gap:14, width:"100%", padding:"16px", background:`${brand.accent2}0a`, border:`1px solid ${brand.accent2}22`, borderRadius:16, color:G.text, fontFamily:G.font, fontSize:"0.92rem", fontWeight:600, cursor:"pointer" }}>
-                <span style={{ width:38, height:38, borderRadius:12, background:`${brand.accent2}18`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.2rem" }}>🎨</span>
-                <div><div>Personalizar diseño</div><div style={{ fontSize:"0.72rem", color:G.dim, fontWeight:400 }}>Logo, colores, nombre</div></div>
-              </button>
-            </div>}
-            <button onClick={() => { DB.clearSession(); onLogout(); }} style={{ display:"flex", alignItems:"center", gap:14, width:"100%", padding:"16px", background:"#ff3d6e0a", border:"1px solid #ff3d6e33", borderRadius:16, color:"#ff3d6e", fontFamily:G.font, fontSize:"0.92rem", fontWeight:600, cursor:"pointer" }}>
-              <span style={{ width:38, height:38, borderRadius:12, background:"#ff3d6e18", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.2rem" }}>↩</span>Cerrar sesión
-            </button>
-            <div style={{ textAlign:"center", marginTop:20, fontSize:"0.65rem", color:"rgba(232,238,255,0.15)" }}>{brand.name} v{brand.version||APP_VERSION} · {brand.buildDate||BUILD_DATE}</div>
-          </div>
-        </div>
-      )}
-      <div style={{ position:"relative", zIndex:5, display:"flex", borderBottom:`1px solid ${G.glassBorder}`, background:"rgba(5,8,18,0.5)", flexShrink:0 }}>
-        {tabBtn("chat","💬 Chat",false)}{tabBtn("code","{ } Código",newBadge.code)}{tabBtn("expl","📖 Explicación",newBadge.expl)}
-      </div>
-      {tab==="chat" && (
-        <div style={{ display:"flex", flexDirection:"column", flex:1, overflow:"hidden", zIndex:1 }}>
-          <div style={{ flex:1, overflowY:"auto", padding:"18px 16px", display:"flex", flexDirection:"column", gap:14 }}>
-            {msgs.map((m,i) => (
-              <div key={i} style={{ display:"flex", flexDirection:m.role==="user"?"row-reverse":"row", gap:10 }}>
-                <div style={{ width:32, height:32, borderRadius:11, flexShrink:0, background:m.role==="ai"?`${brand.accent}18`:`${brand.accent2}18`, border:`1px solid ${m.role==="ai"?brand.accent:brand.accent2}33`, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, color:m.role==="ai"?brand.accent:brand.accent2, fontSize:"0.8rem" }}>
-                  {m.role==="ai" ? "AI" : user.name[0].toUpperCase()}
-                </div>
-                <div style={{ maxWidth:"80%", padding:"12px 16px", fontSize:"0.85rem", lineHeight:1.7, background:m.role==="ai"?G.glass:`${brand.accent}0e`, border:`1px solid ${m.role==="ai"?G.glassBorder:brand.accent+"28"}`, borderRadius:m.role==="ai"?"4px 18px 18px 18px":"18px 4px 18px 18px", whiteSpace:"pre-wrap", color:G.text }}>{m.text}</div>
-              </div>
-            ))}
-            {loading && <div style={{ display:"flex", gap:10 }}><div style={{ width:32, height:32, borderRadius:11, background:`${brand.accent}18`, border:`1px solid ${brand.accent}33`, display:"flex", alignItems:"center", justifyContent:"center", color:brand.accent, fontSize:"0.8rem", flexShrink:0 }}>AI</div><div style={{ padding:"14px 18px", background:G.glass, border:`1px solid ${G.glassBorder}`, borderRadius:"4px 18px 18px 18px" }}><div style={{ display:"flex", gap:5 }}>{[0,1,2].map(i => <div key={i} style={{ width:5, height:5, borderRadius:"50%", background:brand.accent, animation:`bounce 1.2s ease ${i*0.2}s infinite` }} />)}</div></div></div>}
-            <div ref={endRef} />
-          </div>
-          <div style={{ padding:"10px 16px", display:"flex", gap:8, overflowX:"auto", flexShrink:0 }}>
-            {QUICK_PROMPTS.map((q,i) => <button key={i} onClick={() => send(q.prompt)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", borderRadius:50, background:G.glass, border:`1px solid ${G.glassBorder}`, color:q.color, fontFamily:G.font, fontSize:"0.76rem", cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}><span>{q.icon}</span>{q.label}</button>)}
-          </div>
-          <div style={{ padding:"12px 16px", borderTop:`1px solid ${G.glassBorder}`, display:"flex", gap:10, background:"rgba(5,8,18,0.7)", flexShrink:0 }}>
-            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key==="Enter" && send(input)} placeholder="Describe el algoritmo en tus palabras..." style={{ flex:1, padding:"13px 18px", background:G.glass, border:`1px solid ${G.glassBorder}`, borderRadius:16, fontFamily:G.font, fontSize:"0.85rem", color:G.text, outline:"none" }} onFocus={e => e.target.style.borderColor=brand.accent+"66"} onBlur={e => e.target.style.borderColor=G.glassBorder} />
-            <button onClick={() => send(input)} style={{ width:46, height:46, borderRadius:14, background:`linear-gradient(135deg,${brand.accent},${brand.accent2})`, border:"none", cursor:"pointer", color:"white", fontSize:"1.1rem", flexShrink:0 }}>→</button>
-          </div>
-        </div>
-      )}
-      {tab==="code" && (
-        <div style={{ display:"flex", flexDirection:"column", flex:1, overflow:"hidden", zIndex:1 }}>
-          <div style={{ padding:"12px 16px", borderBottom:`1px solid ${G.glassBorder}`, display:"flex", gap:8, flexShrink:0 }}>
-            <NeonButton small ghost color={brand.accent} onClick={() => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false),2000); }}>{copied?"✓ Copiado":"⊕ Copiar código"}</NeonButton>
-            {code && <NeonButton small ghost color={G.dim} onClick={() => { setCode(""); setExpl(""); setNewBadge({ code:false, expl:false }); }}>↺ Limpiar</NeonButton>}
-          </div>
-          <div style={{ flex:1, overflowY:"auto", padding:"18px", background:"rgba(3,5,12,0.8)" }}>
-            {code ? <pre style={{ fontFamily:G.mono, fontSize:"0.78rem", lineHeight:2, whiteSpace:"pre-wrap", wordBreak:"break-word", color:"#a8b8d8", margin:0 }} dangerouslySetInnerHTML={{ __html:hiCode(code) }} /> : <div style={{ textAlign:"center", padding:"80px 20px", color:G.dim }}><div style={{ fontSize:"3rem", marginBottom:16, opacity:0.15 }}>{"{ }"}</div><div style={{ fontSize:"0.85rem", lineHeight:2 }}>El código aparecerá aquí<br/><span style={{ color:brand.accent }}>←</span> Ve al Chat y pide un algoritmo</div></div>}
-          </div>
-        </div>
-      )}
-      {tab==="expl" && (
-        <div style={{ flex:1, overflowY:"auto", padding:"20px 18px", zIndex:1 }}>
-          {expl ? <GlassCard style={{ padding:"18px 20px" }}><div style={{ fontSize:"0.68rem", color:brand.accent, letterSpacing:"0.12em", fontWeight:700, marginBottom:8, textTransform:"uppercase" }}>Explicación del algoritmo</div><p style={{ fontSize:"0.85rem", lineHeight:1.85, color:G.text, margin:0, whiteSpace:"pre-wrap" }}>{expl}</p></GlassCard> : <div style={{ textAlign:"center", padding:"80px 20px", color:G.dim }}><div style={{ fontSize:"3rem", marginBottom:16, opacity:0.15 }}>📖</div><div style={{ fontSize:"0.85rem", lineHeight:2 }}>La explicación aparecerá aquí<br/><span style={{ color:brand.accent }}>←</span> Ve al Chat y pide un algoritmo</div></div>}
-        </div>
-      )}
-    </div>
-  );
-}
-function App() {
-  const [user, setUser] = useState(() => DB.session());
-  if (!user) return <LoginScreen onAuth={setUser} />;
-  return <ChatApp user={user} onLogout={() => setUser(null)} />;
-}
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+const getDaysLeft=(user)=>{if(!user||user.role==="admin")return Infinity;if(user.plan==="lifetime")return Infinity;if(user.plan==="monthly"&&user.planMonths&&user.approvedAt){const totalDays=user.planMonths*30;const elapsed=Math.floor((Date.now()-new Date(user.approvedAt))/86400000);return totalDays-elapsed;}if(!user.approvedAt)return 0;return TRIAL_DAYS-Math.floor((Date.now()-new Date(user.approvedAt))/86400000);};
+const isAccessActive=(user)=>{if(!user)return false;if(user.role==="admin")return true;if(user.plan==="lifetime")return true;return getDaysLeft(user)>0;};
+const G={bg:"#050812",glass:"rgba(255,255,255,0.04)",glassBorder:"rgba(255,255,255,0.08)",text:"#E8EEFF",dim:"rgba(232,238,255,0.35)",font:"'Outfit', sans-serif",mono:"'JetBrains Mono', monospace"};
+function GlassCard({children,style,onClick}){return <div onClick={onClick} style={{background:G.glass,border:`1px solid ${G.glassBorder}`,borderRadius:20,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",...style}}>{children}</div>;}
+function NeonButton({children,onClick,color="#4FC3F7",full=false,ghost=false,small=false,style={}}){const[pressed,setPressed]=useState(false);return <button onPointerDown={()=>setPressed(true)} onPointerUp={()=>setPressed(false)} onPointerLeave={()=>setPressed(false)} onClick={onClick} style={{width:full?"100%":"auto",padding:small?"8px 16px":"14px 24px",border:ghost?`1px solid ${color}55`:"none",borderRadius:14,background:ghost?`${color}10`:`linear-gradient(135deg,${color}dd,${color}88)`,color:ghost?color:"#050812",fontFamily:G.font,fontWeight:700,fontSize:small?"0.78rem":"0.9rem",cursor:"pointer",transform:pressed?"scale(0.97)":"scale(1)",transition:"all 0.15s",boxShadow:ghost?"none":`0 0 24px ${color}44`,...style}}>{children}</button>;}
+function Input({placeholder,value,onChange,type="text",onEnter,icon}){const[focused,setFocused]=useState(false);const brand=DB.brand();return <div style={{position:"relative",marginBottom:12}}>{icon&&<div style={{position:"absolute",left:16,top:"50%",transform:"translateY(-50%)",color:focused?brand.accent:G.dim,fontSize:"1rem",pointerEvents:"none"}}>{icon}</div>}<input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)} onKeyDown={e=>e.key==="Enter"&&onEnter?.()} style={{width:"100%",padding:icon?"14px 16px 14px 44px":"14px 18px",background:focused?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.03)",border:`1px solid ${focused?brand.accent+"66":G.glassBorder}`,borderRadius:14,fontFamily:G.font,fontSize:"0.9rem",color:G.text,outline:"none",transition:"all 0.2s",boxSizing:"border-box"}} /></div>;}
+function Pill({children,color,active,onClick}){return <button onClick={onClick} style={{padding:"8px 16px",borderRadius:50,border:`1px solid ${active?color+"88":G.glassBorder}`,background:active?`${color}22`:G.glass,color:active?color:G.dim,fontFamily:G.font,fontSize:"0.78rem",fontWeight:active?600:400,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{children}</button>;}
+function AmbientBg({accent,accent2}){return <div style={{position:"fixed",inset:0,overflow:"hidden",pointerEvents:"none",zIndex:0}}><div style={{position:"absolute",width:400,height:400,borderRadius:"50%",background:`radial-gradient(circle,${accent}18 0%,transparent 70%)`,top:-100,right:-100,animation:"float1 8s ease-in-out infinite"}}/><div style={{position:"absolute",width:300,height:300,borderRadius:"50%",background:`radial-gradient(circle,${accent2}14 0%,transparent 70%)`,bottom:100,left:-80,animation:"float2 10s ease-in-out infinite"}}/><div style={{position:"absolute",inset:0,backgroundImage:`radial-gradient(${accent}08 1px,transparent 1px)`,backgroundSize:"32px 32px"}}/><style>{`@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,20px)}}@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes scaleIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}@keyframes float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-6px)}}*{-webkit-tap-highlight-color:transparent;}::-webkit-scrollbar{width:0;}input::placeholder{color:rgba(232,238,255,0.25);}`}</style></div>;}
+function LoginScreen({onAuth}){const brand=DB.brand();const[mode,setMode]=useState("login");const[name,setName]=useState("");const[email,setEmail]=useState("");const[pass,setPass]=useState("");const[err,setErr]=useState("");const[ok,setOk]=useState("");const[loading,setLoading]=useState(false);async function submit(){setErr("");setOk("");setLoading(true);await new Promise(r=>setTimeout(r,600));const users=DB.users();if(mode==="register"){if(!name||!email||!pass){setErr("Completa todos los campos");setLoading(false);return;}if(pass.length<6){setErr("Contraseña mínimo 6 caracteres");setLoading(false);return;}if(users[email]){setErr("Este email ya existe");setLoading(false);return;}const isAdmin=ADMIN_EMAILS.includes(email.toLowerCase());users[email]={name,email,pass,role:isAdmin?"admin":"user",status:isAdmin?"approved":"pending",plan:isAdmin?"lifetime":"trial",planMonths:null,registeredAt:new Date().toISOString(),approvedAt:isAdmin?new Date().toISOString():null};DB.saveUsers(users);setOk("✓ Cuenta creada exitosamente");setTimeout(()=>{setMode("login");setOk("");},1800);}else{const u=users[email.toLowerCase()]||users[email];if(!u){setErr("Email no encontrado");setLoading(false);return;}if(u.pass!==pass){setErr("Contraseña incorrecta");setLoading(false);return;}if(u.status==="pending"){setErr("Cuenta pendiente de aprobación");setLoading(false);return;}if(u.status==="rejected"){setErr("Acceso rechazado");setLoading(false);return;}if(u.role!=="admin"&&!isAccessActive(u)){setErr("Tu período de acceso ha vencido.");setLoading(false);return;}DB.saveSession(u);onAuth(u);}setLoading(false);}
+return(<div style={{minHeight:"100vh",background:G.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px",fontFamily:G.font,position:"relative",overflow:"hidden"}}><AmbientBg accent={brand.accent} accent2={brand.accent2}/><div style={{position:"relative",zIndex:1,width:"100%",maxWidth:400,animation:"scaleIn 0.5s ease"}}><div style={{textAlign:"center",marginBottom:36}}><div style={{display:"flex",justifyContent:"center",marginBottom:20,filter:`drop-shadow(0 0 24px ${brand.accent}55)`,animation:"float 4s ease-in-out infinite"}}><svg width="110" height="110" viewBox="0 0 140 140" fill="none"><defs><linearGradient id="lgS" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={brand.accent}/><stop offset="100%" stopColor={brand.accent2}/></linearGradient><linearGradient id="lgF" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={brand.accent} stopOpacity="0.22"/><stop offset="100%" stopColor={brand.accent2} stopOpacity="0.12"/></linearGradient><linearGradient id="lgU" x1="0%" y1="0%" x2="10%" y2="100%"><stop offset="0%" stopColor="#ffffff"/><stop offset="50%" stopColor="#b8e4ff"/><stop offset="100%" stopColor="rgba(255,255,255,0.88)"/></linearGradient><filter id="lgGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><polygon points="70,17 115,42 115,98 70,123 25,98 25,42" fill="url(#lgF)" stroke="url(#lgS)" strokeWidth="1.75" filter="url(#lgGlow)"/><path d="M50 38 L50 77 Q50 97 70 97 Q90 97 90 77 L90 38" fill="none" stroke="url(#lgU)" strokeWidth="10" strokeLinecap="round" filter="url(#lgGlow)"/><circle cx="98" cy="33" r="6.5" fill={brand.accent}/><circle cx="98" cy="33" r="3" fill="white"/></svg></div><div style={{fontFamily:G.font,fontWeight:900,letterSpacing:"0.16em",fontSize:"clamp(3rem,20vw,4.2rem)",background:`linear-gradient(135deg,#ffffff 0%,#a8d8ff 30%,${brand.accent} 52%,${brand.accent2} 78%,#ffffff 100%)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{brand.name}</div><div style={{width:50,height:2,background:`linear-gradient(90deg,${brand.accent},${brand.accent2})`,borderRadius:2,margin:"10px auto 8px"}}/><div style={{fontSize:"0.62rem",color:G.dim,letterSpacing:"0.42em",textTransform:"uppercase"}}>{brand.sub}</div></div>
+<GlassCard style={{padding:28}}><div style={{display:"flex",background:"rgba(255,255,255,0.04)",borderRadius:12,padding:4,marginBottom:24}}>{["login","register"].map(m=><button key={m} onClick={()=>{setMode(m);setErr("");setOk("");}} style={{flex:1,padding:"10px",border:mode===m?`1px solid ${brand.accent}44`:"1px solid transparent",borderRadius:10,background:mode===m?`${brand.accent}22`:"transparent",color:mode===m?brand.accent:G.dim,fontFamily:G.font,fontSize:"0.85rem",fontWeight:mode===m?700:400,cursor:"pointer"}}>{m==="login"?"Iniciar sesión":"Registrarse"}</button>)}</div>{mode==="register"&&<Input icon="✦" placeholder="Tu nombre completo" value={name} onChange={setName}/>}<Input icon="@" placeholder="correo@ejemplo.com" value={email} onChange={setEmail} type="email"/><Input icon="◈" placeholder="Contraseña" value={pass} onChange={setPass} type="password" onEnter={submit}/>{err&&<div style={{padding:"12px 16px",background:"#ff3d6e14",border:"1px solid #ff3d6e44",borderRadius:12,marginBottom:16,fontSize:"0.82rem",color:"#ff3d6e"}}>⚠ {err}</div>}{ok&&<div style={{padding:"12px 16px",background:`${brand.accent}14`,border:`1px solid ${brand.accent}44`,borderRadius:12,marginBottom:16,fontSize:"0.82rem",color:brand.accent}}>{ok}</div>}<NeonButton onClick={submit} full color={brand.accent} style={{opacity:loading?0.7:1}}>{loading?"···":mode==="login"?"Entrar →":"Crear cuenta →"}</NeonButton>{mode==="register"&&<div style={{marginTop:16,padding:"12px 16px",background:`${brand.accent2}10`,border:`1px solid ${brand.accent2}28`,borderRadius:12,fontSize:"0.75rem",color:brand.accent2}}>ℹ Tendrás <strong>{TRIAL_DAYS} días</strong> de prueba al ser aprobado.</div>}</GlassCard></div></div>);}
+function AdminUsers({onBack}){const brand=DB.brand();const[users,setUsers]=useState(DB.users());const[filter,setFilter]=useState("pending");const[toast,setToast]=useState("");const[planModal,setPlanModal]=useState(null);const[selectedPlan,setSelectedPlan]=useState("trial");const[selectedMonths,setSelectedMonths]=useState(1);function toast_(msg){setToast(msg);setTimeout(()=>setToast(""),3000);}function reject(email){const u=DB.users();u[email].status="rejected";DB.saveUsers(u);setUsers({...u});toast_(`✗ ${u[email].name} rechazado`);}function approveWithPlan(email,plan,months=null){const u=DB.users();u[email].status="approved";u[email].plan=plan;u[email].planMonths=plan==="monthly"?months:null;u[email].approvedAt=new Date().toISOString();DB.saveUsers(u);setUsers({...u});setPlanModal(null);toast_(`✓ ${u[email].name} aprobado`);}function revoke(email){const u=DB.users();u[email].status="rejected";DB.saveUsers(u);setUsers({...u});toast_("⊘ Acceso revocado");}
+const all=Object.values(users).filter(u=>u.role!=="admin");const counts={pending:all.filter(u=>u.status==="pending").length,approved:all.filter(u=>u.status==="approved").length,rejected:all.filter(u=>u.status==="rejected").length};const list=filter==="all"?all:all.filter(u=>u.status===filter);const sColor={pending:"#FFCC02",approved:brand.accent,rejected:"#ff3d6e"};
+return(<div style={{minHeight:"100vh",background:G.bg,fontFamily:G.font,color:G.text,position:"relative"}}><AmbientBg accent={brand.accent} accent2={brand.accent2}/><div style={{position:"relative",zIndex:1}}><div style={{padding:"16px 20px",display:"flex",alignItems:"center",gap:14,borderBottom:`1px solid ${G.glassBorder}`}}><button onClick={onBack} style={{width:36,height:36,borderRadius:12,background:G.glass,border:`1px solid ${G.glassBorder}`,color:G.text,fontSize:"1rem",cursor:"pointer"}}>←</button><div><div style={{fontWeight:700,fontSize:"1.1rem"}}>Gestión de usuarios</div><div style={{fontSize:"0.65rem",color:G.dim}}>USALA v{APP_VERSION}</div></div></div><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,padding:"16px 20px"}}>{[["Pendientes",counts.pending,"#FFCC02"],["Activos",counts.approved,brand.accent],["Rechazados",counts.rejected,"#ff3d6e"]].map(([l,v,c])=><GlassCard key={l} style={{padding:"16px 10px",textAlign:"center"}}><div style={{fontSize:"1.8rem",fontWeight:900,color:c}}>{v}</div><div style={{fontSize:"0.62rem",color:G.dim,marginTop:6}}>{l.toUpperCase()}</div></GlassCard>)}</div><div style={{display:"flex",gap:8,padding:"0 20px 16px",overflowX:"auto"}}>{[["pending","Pendientes","#FFCC02"],["approved","Activos",brand.accent],["rejected","Rechazados","#ff3d6e"],["all","Todos",G.dim]].map(([f,l,c])=><Pill key={f} active={filter===f} color={c} onClick={()=>setFilter(f)}>{l}</Pill>)}</div>
+<div style={{padding:"0 20px",display:"flex",flexDirection:"column",gap:12,paddingBottom:40}}>{list.length===0&&<div style={{textAlign:"center",padding:"60px 0",color:G.dim}}>Sin usuarios en esta categoría</div>}{list.map(u=><GlassCard key={u.email} style={{padding:18}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}><div style={{display:"flex",gap:12,alignItems:"center"}}><div style={{width:42,height:42,borderRadius:14,background:`${sColor[u.status]}18`,border:`1px solid ${sColor[u.status]}33`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,color:sColor[u.status]}}>{u.name[0].toUpperCase()}</div><div><div style={{fontWeight:600}}>{u.name}</div><div style={{fontSize:"0.7rem",color:G.dim}}>{u.email}</div></div></div><div style={{fontSize:"0.62rem",padding:"4px 10px",borderRadius:50,background:`${sColor[u.status]}15`,border:`1px solid ${sColor[u.status]}33`,color:sColor[u.status]}}>{u.status==="pending"?"⏳ Pendiente":u.status==="approved"?"✓ Activo":"✗ Rechazado"}</div></div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{u.status==="pending"&&<><NeonButton small ghost color={brand.accent} onClick={()=>{setPlanModal(u.email);setSelectedPlan("trial");setSelectedMonths(1);}}>✓ Aprobar</NeonButton><NeonButton small ghost color="#ff3d6e" onClick={()=>reject(u.email)}>✗ Rechazar</NeonButton></>}{u.status==="approved"&&<><NeonButton small ghost color={brand.accent} onClick={()=>{setPlanModal(u.email);setSelectedPlan(u.plan||"trial");setSelectedMonths(u.planMonths||1);}}>✎ Plan</NeonButton><NeonButton small ghost color="#ff3d6e" onClick={()=>revoke(u.email)}>⊘ Revocar</NeonButton></>}{u.status==="rejected"&&<NeonButton small ghost color={brand.accent} onClick={()=>{setPlanModal(u.email);setSelectedPlan("trial");setSelectedMonths(1);}}>↩ Reactivar</NeonButton>}</div></GlassCard>)}</div></div>
+{planModal&&<div style={{position:"fixed",inset:0,zIndex:999}}><div onClick={()=>setPlanModal(null)} style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.7)"}}/><div style={{position:"absolute",bottom:0,left:0,right:0,background:"#0a0e1e",border:`1px solid ${G.glassBorder}`,borderRadius:"24px 24px 0 0",padding:"20px 20px 50px"}}><div style={{width:40,height:4,borderRadius:4,background:G.glassBorder,margin:"0 auto 20px"}}/><div style={{fontWeight:700,marginBottom:20}}>Plan para: {DB.users()[planModal]?.name}</div><div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>{[["trial","⏱ Prueba 15 días","#FFCC02"],["monthly",`📅 ${selectedMonths} mes(es)`,brand.accent],["lifetime","♾ Vitalicio","#A5D6A7"]].map(([p,l,c])=><button key={p} onClick={()=>setSelectedPlan(p)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",background:selectedPlan===p?`${c}18`:G.glass,border:`1px solid ${selectedPlan===p?c+"88":G.glassBorder}`,borderRadius:16,cursor:"pointer",fontFamily:G.font,color:G.text}}><span style={{fontSize:"1.2rem"}}>{l.split(" ")[0]}</span><span style={{fontWeight:600}}>{l}</span>{selectedPlan===p&&<span style={{marginLeft:"auto",color:c}}>✓</span>}</button>)}{selectedPlan==="monthly"&&<div style={{display:"flex",gap:8,flexWrap:"wrap",padding:"0 4px"}}>{[1,2,3,6,12,24].map(m=><button key={m} onClick={()=>setSelectedMonths(m)} style={{padding:"8px 14px",borderRadius:10,border:`1px solid ${selectedMonths===m?brand.accent:G.glassBorder}`,background:selectedMonths===m?`${brand.accent}22`:"transparent",color:selectedMonths===m?brand.accent:G.dim,fontFamily:G.font,cursor:"pointer"}}>{m===12?"1 año":m===24?"2 años":`${m}m`}</button>)}</div>}</div><NeonButton full color={selectedPlan==="lifetime"?"#A5D6A7":selectedPlan==="monthly"?brand.accent:"#FFCC02"} onClick={()=>approveWithPlan(planModal,selectedPlan,selectedMonths)}>✓ Confirmar acceso</NeonButton></div></div>}
+{toast&&<div style={{position:"fixed",bottom:30,left:"50%",transform:"translateX(-50%)",background:"rgba(5,8,18,0.95)",border:`1px solid ${brand.accent}44`,color:brand.accent,padding:"12px 24px",borderRadius:50,fontSize:"0.82rem",fontFamily:G.font,fontWeight:600,zIndex:998,whiteSpace:"nowrap"}}>{toast}</div>}</div>);} 
+function BrandingPanel({onBack}){const[brand,setBrand]=useState(DB.brand());const[tab,setTab]=useState("identity");const[toast,setToast]=useState("");const up=(k,v)=>setBrand(p=>({...p,[k]:v}));const toast_=msg=>{setToast(msg);setTimeout(()=>setToast(""),2500);};function save(){DB.saveBrand(brand);toast_("✓ Guardado");setTimeout(()=>window.location.reload(),1200);}
+const EMOJIS=["◈","◉","⬡","⟡","✦","⬢","◆","★","⚡","🧠","🤖","🔮","🚀","💎","⚙️","🌐"];const PRESETS=[{name:"Cyan",a:"#4FC3F7",b:"#00B8D4"},{name:"Lavanda",a:"#CE93D8",b:"#9C27B0"},{name:"Verde",a:"#80CBC4",b:"#00F5A0"},{name:"Dorado",a:"#FFCC02",b:"#FF9500"},{name:"Rosa",a:"#F48FB1",b:"#FF3D6E"},{name:"Naranja",a:"#FF8A65",b:"#FF5722"}];
+return(<div style={{minHeight:"100vh",background:G.bg,fontFamily:G.font,color:G.text,position:"relative"}}><AmbientBg accent={brand.accent} accent2={brand.accent2}/><div style={{position:"relative",zIndex:1,display:"flex",flexDirection:"column",height:"100vh"}}><div style={{padding:"16px 20px",display:"flex",alignItems:"center",gap:14,borderBottom:`1px solid ${G.glassBorder}`,flexShrink:0}}><button onClick={onBack} style={{width:36,height:36,borderRadius:12,background:G.glass,border:`1px solid ${G.glassBorder}`,color:G.text,fontSize:"1rem",cursor:"pointer"}}>←</button><div style={{fontWeight:700,fontSize:"1.1rem"}}>Personalizar</div></div><div style={{display:"flex",borderBottom:`1px solid ${G.glassBorder}`,flexShrink:0}}>{[["identity","Identidad"],["colors","Colores"],["version","Versión"],["preview","Preview"]].map(([t,l])=><button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"10px 4px",border:"none",background:"none",borderBottom:`2px solid ${tab===t?brand.accent:"transparent"}`,color:tab===t?brand.accent:G.dim,fontFamily:G.font,fontSize:"0.72rem",fontWeight:tab===t?700:400,cursor:"pointer"}}>{l}</button>)}</div>
+<div style={{flex:1,overflowY:"auto",padding:"20px",paddingBottom:100}}>{tab==="identity"&&<><div style={{fontSize:"0.68rem",color:G.dim,marginBottom:8}}>NOMBRE</div><input value={brand.name} onChange={e=>up("name",e.target.value)} style={{width:"100%",padding:"13px 16px",background:G.glass,border:`1px solid ${G.glassBorder}`,borderRadius:14,fontFamily:G.font,fontSize:"1rem",fontWeight:700,color:brand.accent,outline:"none",marginBottom:16}}/><div style={{fontSize:"0.68rem",color:G.dim,marginBottom:8}}>SUBTÍTULO</div><input value={brand.sub} onChange={e=>up("sub",e.target.value)} style={{width:"100%",padding:"13px 16px",background:G.glass,border:`1px solid ${G.glassBorder}`,borderRadius:14,fontFamily:G.font,fontSize:"0.85rem",color:G.text,outline:"none",marginBottom:20}}/><div style={{fontSize:"0.68rem",color:G.dim,marginBottom:8}}>ÍCONO</div><div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:8}}>{EMOJIS.map(e=><button key={e} onClick={()=>up("logo",e)} style={{aspectRatio:"1",borderRadius:12,background:brand.logo===e?`${brand.accent}22`:G.glass,border:`1px solid ${brand.logo===e?brand.accent:G.glassBorder}`,fontSize:"1.1rem",cursor:"pointer"}}>{e}</button>)}</div></>}{tab==="colors"&&<><div style={{fontSize:"0.68rem",color:G.dim,marginBottom:8}}>PRESETS</div><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:24}}>{PRESETS.map(p=><button key={p.name} onClick={()=>{up("accent",p.a);up("accent2",p.b);}} style={{padding:"14px 10px",borderRadius:14,background:`linear-gradient(135deg,${p.a}22,${p.b}18)`,border:`1px solid ${G.glassBorder}`,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:6}}><div style={{display:"flex",gap:4}}><div style={{width:12,height:12,borderRadius:"50%",background:p.a}}/><div style={{width:12,height:12,borderRadius:"50%",background:p.b}}/></div><span style={{fontSize:"0.72rem",color:p.a,fontFamily:G.font}}>{p.name}</span></button>)}</div><div style={{display:"flex",gap:12,alignItems:"center",marginBottom:16}}><input type="color" value={brand.accent} onChange={e=>up("accent",e.target.value)} style={{width:52,height:44,border:"none",borderRadius:12,cursor:"pointer"}}/><div style={{flex:1,padding:"12px 16px",background:`${brand.accent}18`,border:`1px solid ${brand.accent}44`,borderRadius:12,color:brand.accent,fontFamily:G.mono}}>{brand.accent}</div></div><div style={{display:"flex",gap:12,alignItems:"center"}}><input type="color" value={brand.accent2} onChange={e=>up("accent2",e.target.value)} style={{width:52,height:44,border:"none",borderRadius:12,cursor:"pointer"}}/><div style={{flex:1,padding:"12px 16px",background:`${brand.accent2}18`,border:`1px solid ${brand.accent2}44`,borderRadius:12,color:brand.accent2,fontFamily:G.mono}}>{brand.accent2}</div></div></>}{tab==="version"&&<><div style={{background:`${brand.accent}0e`,border:`1px solid ${brand.accent}33`,borderRadius:16,padding:"18px 20px",marginBottom:24,display:"flex",alignItems:"center",gap:16}}><div style={{width:48,height:48,borderRadius:14,background:`${brand.accent}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.4rem"}}>📦</div><div><div style={{fontSize:"0.68rem",color:G.dim,marginBottom:4}}>VERSIÓN</div><div style={{fontFamily:G.mono,fontSize:"1.5rem",fontWeight:700,color:brand.accent}}>v{brand.version||"1.0.0"}</div></div></div><div style={{display:"flex",gap:10,marginBottom:20}}>{[0,1,2].map(i=><div key={i} style={{flex:1,textAlign:"center"}}><div style={{fontSize:"0.62rem",color:G.dim,marginBottom:6}}>{["MAYOR","MENOR","PARCHE"][i]}</div><div style={{display:"flex",alignItems:"center",background:G.glass,border:`1px solid ${G.glassBorder}`,borderRadius:12,overflow:"hidden"}}><button onClick={()=>{const p=(brand.version||"1.0.0").split(".");p[i]=Math.max(0,parseInt(p[i])-1);up("version",p.join("."));}} style={{padding:"12px 14px",background:"none",border:"none",color:G.dim,cursor:"pointer"}}>−</button><div style={{flex:1,textAlign:"center",fontFamily:G.mono,fontWeight:700,color:brand.accent}}>{(brand.version||"1.0.0").split(".")[i]}</div><button onClick={()=>{const p=(brand.version||"1.0.0").split(".");p[i]=parseInt(p[i])+1;up("version",p.join("."));}} style={{padding:"12px 14px",background:"none",border:"none",color:brand.accent,cursor:"pointer"}}>+</button></div></div>)}</div><div style={{display:"flex",gap:10}}><input type="date" value={brand.buildDate||BUILD_DATE} onChange={e=>up("buildDate",e.target.value)} style={{flex:1,padding:"13px 16px",background:G.glass,border:`1px solid ${G.glassBorder}`,borderRadius:14,fontFamily:G.mono,fontSize:"0.85rem",color:brand.accent,outline:"none",colorScheme:"dark"}}/><button onClick={()=>up("buildDate",new Date().toISOString().split("T")[0])} style={{padding:"13px 16px",background:`${brand.accent}18`,border:`1px solid ${brand.accent}44`,borderRadius:14,color:brand.accent,fontFamily:G.font,fontSize:"0.78rem",fontWeight:600,cursor:"pointer"}}>📅 Hoy</button></div></>}{tab==="preview"&&<GlassCard style={{padding:24,textAlign:"center"}}><div style={{width:52,height:52,borderRadius:16,background:`${brand.accent}22`,border:`1px solid ${brand.accent}44`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px",fontSize:"1.4rem"}}>{brand.logo}</div><div style={{fontWeight:900,fontSize:"1.3rem"}}>{brand.name}</div><div style={{fontSize:"0.65rem",color:G.dim,marginTop:4,marginBottom:18}}>{brand.sub}</div><div style={{height:42,background:`linear-gradient(135deg,${brand.accent}dd,${brand.accent2}88)`,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,color:G.bg}}>Entrar →</div></GlassCard>}</div>
+<div style={{position:"fixed",bottom:0,left:0,right:0,padding:"16px 20px",background:"rgba(5,8,18,0.95)",backdropFilter:"blur(20px)",borderTop:`1px solid ${G.glassBorder}`}}><NeonButton onClick={save} full color={brand.accent}>💾 Guardar y aplicar</NeonButton></div></div>{toast&&<div style={{position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",background:"rgba(5,8,18,0.9)",border:`1px solid ${brand.accent}44`,color:brand.accent,padding:"12px 24px",borderRadius:50,fontSize:"0.82rem",fontFamily:G.font,fontWeight:600,zIndex:999,whiteSpace:"nowrap"}}>{toast}</div>}</div>);}
+function ChatApp({user,onLogout}){const brand=DB.brand();const[tab,setTab]=useState("chat");const[view,setView]=useState("app");const[msgs,setMsgs]=useState([{role:"ai",text:`Hola, ${user.name.split(" ")[0]} 👋\n\nElige un algoritmo abajo o describe lo que necesitas en lenguaje natural.`}]);const[input,setInput]=useState("");const[loading,setLoading]=useState(false);const[code,setCode]=useState("");const[expl,setExpl]=useState("");const[history,setHistory]=useState([]);const[copied,setCopied]=useState(false);const[newBadge,setNewBadge]=useState({code:false,expl:false});const[menuOpen,setMenuOpen]=useState(false);const endRef=useRef(null);const dl=getDaysLeft(user);const planBadge=user.role==="admin"?{label:"⚙ Admin",color:brand.accent}:user.plan==="lifetime"?{label:"♾ Vitalicio",color:"#A5D6A7"}:user.plan==="monthly"?{label:`📅 ${Math.max(0,dl)}d`,color:dl<=5?"#ff3d6e":brand.accent}:{label:`⏱ ${Math.max(0,dl)}d`,color:dl<=3?"#ff3d6e":"#FFCC02"};
+useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs,loading]);
+if(view==="users")return <AdminUsers onBack={()=>{setView("app");setMenuOpen(false);}}/>;
+if(view==="brand")return <BrandingPanel onBack={()=>{setView("app");setMenuOpen(false);}}/>;
+async function send(text){if(!text?.trim()||loading)return;setMsgs(p=>[...p,{role:"user",text}]);setInput("");setLoading(true);const nh=[...history,{role:"user",content:text}];setHistory(nh);try{const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":"sk-ant-api03-l2dp4lRfFbXJ8aar1XJKV-bk5mPXits4uRAfqwWhtgK68-VIttx0kifOcOJgiq3yq59DAEj4GRS45t62pWrxrA-lOuwdwAA","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2500,system:AI_SYSTEM,messages:nh})});const data=await res.json();if(data.error)throw new Error(data.error.message);const full=data.content.map(b=>b.text||"").join("");setHistory(p=>[...p,{role:"assistant",content:full}]);const cm=full.match(/---CODE---([\s\S]*?)---EXPLANATION---/);const em=full.match(/---EXPLANATION---([\s\S]*?)---END---/);if(cm){setCode(cm[1].trim());setNewBadge(p=>({...p,code:true}));}if(em){setExpl(em[1].trim());setNewBadge(p=>({...p,expl:true}));}setMsgs(p=>[...p,{role:"ai",text:cm?"✓ Código generado.\n\nToca { } para ver el código, o 📖 para la explicación.":full}]);}catch(e){setMsgs(p=>[...p,{role:"ai",text:"⚠ Error de conexión: "+e.message}]);}setLoading(false);}
+function hiCode(c){return c.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(#[^\n]*)/g,'<span style="color:#6272a4;font-style:italic">$1</span>').replace(/\b(def|class|import|from|return|if|else|elif|for|while|in|not|and|or|True|False|None|lambda|try|except|with|as|pass|break|continue|self|yield)\b/g,'<span style="color:#ff79c6">$1</span>').replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,'<span style="color:#f1fa8c">$1</span>').replace(/\b(\d+\.?\d*)\b/g,'<span style="color:#bd93f9">$1</span>').replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g,'<span style="color:#50fa7b">$1</span>');}
+const tabBtn=(t,lbl,badge)=><button onClick={()=>{setTab(t);setNewBadge(p=>({...p,[t==="code"?"code":"expl"]:false}));}} style={{flex:1,padding:"13px 4px",border:"none",background:"none",borderBottom:`2px solid ${tab===t?brand.accent:"transparent"}`,color:tab===t?brand.accent:G.dim,fontFamily:G.font,fontSize:"0.75rem",fontWeight:tab===t?700:400,cursor:"pointer",position:"relative"}}>{lbl}{badge&&<span style={{position:"absolute",top:8,right:"calc(50% - 20px)",width:7,height:7,borderRadius:"50%",background:brand.accent}}/>}</button>;
+return(<div style={{display:"flex",flexDirection:"column",height:"100vh",background:G.bg,color:G.text,fontFamily:G.font,overflow:"hidden",position:"relative"}}><AmbientBg accent={brand.accent} accent2={brand.accent2}/>
+<div style={{position:"relative",zIndex:10,padding:"14px 20px",borderBottom:`1px solid ${G.glassBorder}`,display:"flex",alignItems:"center",justifyContent:"space-between",backdropFilter:"blur(20px)",background:"rgba(5,8,18,0.7)",flexShrink:0}}><div style={{fontWeight:900,fontSize:"1.25rem",letterSpacing:"0.12em",background:`linear-gradient(120deg,#ffffff,${brand.accent},${brand.accent2})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{brand.name}</div><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{fontSize:"0.65rem",padding:"5px 12px",borderRadius:50,background:`${planBadge.color}14`,border:`1px solid ${planBadge.color}44`,color:planBadge.color,fontWeight:600}}>{planBadge.label}</div><button onClick={()=>setMenuOpen(true)} style={{width:34,height:34,borderRadius:11,background:G.glass,border:`1px solid ${G.glassBorder}`,color:G.text,cursor:"pointer",fontWeight:700}}>{user.name[0].toUpperCase()}</button></div></div>
+{menuOpen&&<div style={{position:"fixed",inset:0,zIndex:999}}><div onClick={()=>setMenuOpen(false)} style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.6)"}}/><div style={{position:"absolute",bottom:0,left:0,right:0,background:"#0a0e1e",border:`1px solid ${G.glassBorder}`,borderRadius:"24px 24px 0 0",padding:"12px 20px 50px"}}><div style={{width:40,height:4,borderRadius:4,background:G.glassBorder,margin:"0 auto 20px"}}/><div style={{display:"flex",alignItems:"center",gap:14,padding:"0 4px 16px",borderBottom:`1px solid ${G.glassBorder}`,marginBottom:14}}><div style={{width:46,height:46,borderRadius:15,background:`${brand.accent}22`,border:`1px solid ${brand.accent}44`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,color:brand.accent,fontSize:"1.3rem"}}>{user.name[0].toUpperCase()}</div><div><div style={{fontWeight:700}}>{user.name}</div><div style={{fontSize:"0.73rem",color:G.dim}}>{user.email}</div></div></div>{user.role==="admin"&&<div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}><button onClick={()=>{setMenuOpen(false);setView("users");}} style={{display:"flex",alignItems:"center",gap:14,width:"100%",padding:"16px",background:`${brand.accent}0a`,border:`1px solid ${brand.accent}22`,borderRadius:16,color:G.text,fontFamily:G.font,fontSize:"0.92rem",fontWeight:600,cursor:"pointer"}}><span style={{width:38,height:38,borderRadius:12,background:`${brand.accent}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.2rem"}}>👥</span><div><div>Gestionar usuarios</div><div style={{fontSize:"0.72rem",color:G.dim,fontWeight:400}}>Aprobar y controlar acceso</div></div></button><button onClick={()=>{setMenuOpen(false);setView("brand");}} style={{display:"flex",alignItems:"center",gap:14,width:"100%",padding:"16px",background:`${brand.accent2}0a`,border:`1px solid ${brand.accent2}22`,borderRadius:16,color:G.text,fontFamily:G.font,fontSize:"0.92rem",fontWeight:600,cursor:"pointer"}}><span style={{width:38,height:38,borderRadius:12,background:`${brand.accent2}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.2rem"}}>🎨</span><div><div>Personalizar diseño</div><div style={{fontSize:"0.72rem",color:G.dim,fontWeight:400}}>Logo, colores, nombre</div></div></button></div>}<button onClick={()=>{DB.clearSession();onLogout();}} style={{display:"flex",alignItems:"center",gap:14,width:"100%",padding:"16px",background:"#ff3d6e0a",border:"1px solid #ff3d6e33",borderRadius:16,color:"#ff3d6e",fontFamily:G.font,fontSize:"0.92rem",fontWeight:600,cursor:"pointer"}}><span style={{width:38,height:38,borderRadius:12,background:"#ff3d6e18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.2rem"}}>↩</span>Cerrar sesión</button><div style={{textAlign:"center",marginTop:20,fontSize:"0.65rem",color:"rgba(232,238,255,0.15)"}}>{brand.name} v{brand.version||APP_VERSION}</div></div></div>}
+<div style={{position:"relative",zIndex:5,display:"flex",borderBottom:`1px solid ${G.glassBorder}`,background:"rgba(5,8,18,0.5)",flexShrink:0}}>{tabBtn("chat","💬 Chat",false)}{tabBtn("code","{ } Código",newBadge.code)}{tabBtn("expl","📖 Explicación",newBadge.expl)}</div>
+{tab==="chat"&&<div style={{display:"flex",flexDirection:"column",flex:1,overflow:"hidden",zIndex:1}}><div style={{flex:1,overflowY:"auto",padding:"18px 16px",display:"flex",flexDirection:"column",gap:14}}>{msgs.map((m,i)=><div key={i} style={{display:"flex",flexDirection:m.role==="user"?"row-reverse":"row",gap:10}}><div style={{width:32,height:32,borderRadius:11,flexShrink:0,background:m.role==="ai"?`${brand.accent}18`:`${brand.accent2}18`,border:`1px solid ${m.role==="ai"?brand.accent:brand.accent2}33`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,color:m.role==="ai"?brand.accent:brand.accent2,fontSize:"0.8rem"}}>{m.role==="ai"?"AI":user.name[0].toUpperCase()}</div><div style={{maxWidth:"80%",padding:"12px 16px",fontSize:"0.85rem",lineHeight:1.7,background:m.role==="ai"?G.glass:`${brand.accent}0e`,border:`1px solid ${m.role==="ai"?G.glassBorder:brand.accent+"28"}`,borderRadius:m.role==="ai"?"4px 18px 18px 18px":"18px 4px 18px 18px",whiteSpace:"pre-wrap",color:G.text}}>{m.text}</div></div>)}{loading&&<div style={{display:"flex",gap:10}}><div style={{width:32,height:32,borderRadius:11,background:`${brand.accent}18`,border:`1px solid ${brand.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",color:brand.accent,fontSize:"0.8rem",flexShrink:0}}>AI</div><div style={{padding:"14px 18px",background:G.glass,border:`1px solid ${G.glassBorder}`,borderRadius:"4px 18px 18px 18px"}}><div style={{display:"flex",gap:5}}>{[0,1,2].map(i=><div key={i} style={{width:5,height:5,borderRadius:"50%",background:brand.accent,animation:`bounce 1.2s ease ${i*0.2}s infinite`}}/>)}</div></div></div>}<div ref={endRef}/></div><div style={{padding:"10px 16px",display:"flex",gap:8,overflowX:"auto",flexShrink:0}}>{QUICK_PROMPTS.map((q,i)=><button key={i} onClick={()=>send(q.prompt)} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",borderRadius:50,background:G.glass,border:`1px solid ${G.glassBorder}`,color:q.color,fontFamily:G.font,fontSize:"0.76rem",cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}><span>{q.icon}</span>{q.label}</button>)}</div><div style={{padding:"12px 16px",borderTop:`1px solid ${G.glassBorder}`,display:"flex",gap:10,background:"rgba(5,8,18,0.7)",flexShrink:0}}><input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send(input)} placeholder="Describe el algoritmo en tus palabras..." style={{flex:1,padding:"13px 18px",background:G.glass,border:`1px solid ${G.glassBorder}`,borderRadius:16,fontFamily:G.font,fontSize:"0.85rem",color:G.text,outline:"none"}} onFocus={e=>e.target.style.borderColor=brand.accent+"66"} onBlur={e=>e.target.style.borderColor=G.glassBorder}/><button onClick={()=>send(input)} style={{width:46,height:46,borderRadius:14,background:`linear-gradient(135deg,${brand.accent},${brand.accent2})`,border:"none",cursor:"pointer",color:"white",fontSize:"1.1rem",flexShrink:0}}>→</button></div></div>}
+{tab==="code"&&<div style={{display:"flex",flexDirection:"column",flex:1,overflow:"hidden",zIndex:1}}><div style={{padding:"12px 16px",borderBottom:`1px solid ${G.glassBorder}`,display:"flex",gap:8,flexShrink:0}}><NeonButton small ghost color={brand.accent} onClick={()=>{navigator.clipboard.writeText(code);setCopied(true);setTimeout(()=>setCopied(false),2000);}}>{copied?"✓ Copiado":"⊕ Copiar"}</NeonButton>{code&&<NeonButton small ghost color={G.dim} onClick={()=>{setCode("");setExpl("");setNewBadge({code:false,expl:false});}}>↺ Limpiar</NeonButton>}</div><div style={{flex:1,overflowY:"auto",padding:"18px",background:"rgba(3,5,12,0.8)"}}>{code?<pre style={{fontFamily:G.mono,fontSize:"0.78rem",lineHeight:2,whiteSpace:"pre-wrap",wordBreak:"break-word",color:"#a8b8d8",margin:0}} dangerouslySetInnerHTML={{__html:hiCode(code)}}/>:<div style={{textAlign:"center",padding:"80px 20px",color:G.dim}}><div style={{fontSize:"3rem",marginBottom:16,opacity:0.15}}>{"{ }"}</div><div style={{fontSize:"0.85rem",lineHeight:2}}>El código aparecerá aquí<br/><span style={{color:brand.accent}}>←</span> Ve al Chat y pide un algoritmo</div></div>}</div></div>}
+{tab==="expl"&&<div style={{flex:1,overflowY:"auto",padding:"20px 18px",zIndex:1}}>{expl?<GlassCard style={{padding:"18px 20px"}}><div style={{fontSize:"0.68rem",color:brand.accent,letterSpacing:"0.12em",fontWeight:700,marginBottom:8,textTransform:"uppercase"}}>Explicación</div><p style={{fontSize:"0.85rem",lineHeight:1.85,color:G.text,margin:0,whiteSpace:"pre-wrap"}}>{expl}</p></GlassCard>:<div style={{textAlign:"center",padding:"80px 20px",color:G.dim}}><div style={{fontSize:"3rem",marginBottom:16,opacity:0.15}}>📖</div><div style={{fontSize:"0.85rem",lineHeight:2}}>La explicación aparecerá aquí<br/><span style={{color:brand.accent}}>←</span> Ve al Chat y pide un algoritmo</div></div>}</div>}
+</div>);}
+function App(){const[user,setUser]=useState(()=>DB.session());if(!user)return <LoginScreen onAuth={setUser}/>;return <ChatApp user={user} onLogout={()=>setUser(null)}/>;}
+const root=ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
   </script>
 </body>
 </html>
