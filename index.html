@@ -1,3 +1,4 @@
+Parte 1 de 3 — copia y pega:
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -104,14 +105,7 @@ function Input({ placeholder, value, onChange, type = "text", onEnter, icon }) {
   const [focused, setFocused] = useState(false);
   const brand = DB.brand();
   return <div style={{ position: "relative", marginBottom: 12 }}>{icon && <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: focused ? brand.accent : G.dim, fontSize: "1rem", transition: "color 0.2s", pointerEvents: "none" }}>{icon}</div>}<input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onKeyDown={e => e.key === "Enter" && onEnter?.()} style={{ width: "100%", padding: icon ? "14px 16px 14px 44px" : "14px 18px", background: focused ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)", border: `1px solid ${focused ? brand.accent + "66" : G.glassBorder}`, borderRadius: 14, fontFamily: G.font, fontSize: "0.9rem", color: G.text, outline: "none", transition: "all 0.2s", boxSizing: "border-box", boxShadow: focused ? `0 0 0 3px ${brand.accent}18` : "none" }} /></div>;
-}
-function Pill({ children, color, active, onClick }) {
-  const [pressed, setPressed] = useState(false);
-  return <button onPointerDown={() => setPressed(true)} onPointerUp={() => setPressed(false)} onPointerLeave={() => setPressed(false)} onClick={onClick} style={{ padding: "8px 16px", borderRadius: 50, border: `1px solid ${active ? color + "88" : G.glassBorder}`, background: active ? `${color}22` : G.glass, color: active ? color : G.dim, fontFamily: G.font, fontSize: "0.78rem", fontWeight: active ? 600 : 400, cursor: "pointer", whiteSpace: "nowrap", transform: pressed ? "scale(0.95)" : "scale(1)", transition: "all 0.15s", flexShrink: 0 }}>{children}</button>;
-}
-function AmbientBg({ accent, accent2 }) {
-  return <div style={{ position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}><div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", background: `radial-gradient(circle, ${accent}18 0%, transparent 70%)`, top: -100, right: -100, animation: "float1 8s ease-in-out infinite" }} /><div style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", background: `radial-gradient(circle, ${accent2}14 0%, transparent 70%)`, bottom: 100, left: -80, animation: "float2 10s ease-in-out infinite" }} /><div style={{ position: "absolute", width: 200, height: 200, borderRadius: "50%", background: `radial-gradient(circle, ${accent}0e 0%, transparent 70%)`, bottom: -50, right: 100, animation: "float3 7s ease-in-out infinite" }} /><div style={{ position: "absolute", inset: 0, backgroundImage: `radial-gradient(${accent}08 1px, transparent 1px)`, backgroundSize: "32px 32px" }} /><style>{`@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,20px)}}@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}@keyframes float3{0%,100%{transform:translate(0,0)}50%{transform:translate(-10px,-15px)}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes scaleIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}@keyframes float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-6px)}}*{-webkit-tap-highlight-color:transparent;box-sizing:border-box;}::-webkit-scrollbar{width:0;}input::placeholder{color:rgba(232,238,255,0.25);}select{-webkit-appearance:none;}`}</style></div>;
-}
+}Parte 2 de 3 — pega al final:
 function LoginScreen({ onAuth }) {
   const brand = DB.brand();
   const [mode, setMode] = useState("login");
@@ -305,7 +299,17 @@ function AdminUsers({ onBack }) {
       {toast && <div style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "rgba(5,8,18,0.95)", backdropFilter: "blur(20px)", border: `1px solid ${brand.accent}44`, color: brand.accent, padding: "12px 24px", borderRadius: 50, fontSize: "0.82rem", fontFamily: G.font, fontWeight: 600, zIndex: 998, whiteSpace: "nowrap", animation: "slideUp 0.3s" }}>{toast}</div>}
     </div>
   );
-}function BrandingPanel({ onBack }) {
+}
+Dime cuando esté para la Parte 3 — última 🚀
+function Pill({ children, color, active, onClick }) {
+  const [pressed, setPressed] = useState(false);
+  return <button onPointerDown={() => setPressed(true)} onPointerUp={() => setPressed(false)} onPointerLeave={() => setPressed(false)} onClick={onClick} style={{ padding: "8px 16px", borderRadius: 50, border: `1px solid ${active ? color + "88" : G.glassBorder}`, background: active ? `${color}22` : G.glass, color: active ? color : G.dim, fontFamily: G.font, fontSize: "0.78rem", fontWeight: active ? 600 : 400, cursor: "pointer", whiteSpace: "nowrap", transform: pressed ? "scale(0.95)" : "scale(1)", transition: "all 0.15s", flexShrink: 0 }}>{children}</button>;
+}
+function AmbientBg({ accent, accent2 }) {
+  return <div style={{ position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}><div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", background: `radial-gradient(circle, ${accent}18 0%, transparent 70%)`, top: -100, right: -100, animation: "float1 8s ease-in-out infinite" }} /><div style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", background: `radial-gradient(circle, ${accent2}14 0%, transparent 70%)`, bottom: 100, left: -80, animation: "float2 10s ease-in-out infinite" }} /><div style={{ position: "absolute", width: 200, height: 200, borderRadius: "50%", background: `radial-gradient(circle, ${accent}0e 0%, transparent 70%)`, bottom: -50, right: 100, animation: "float3 7s ease-in-out infinite" }} /><div style={{ position: "absolute", inset: 0, backgroundImage: `radial-gradient(${accent}08 1px, transparent 1px)`, backgroundSize: "32px 32px" }} /><style>{`@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,20px)}}@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}@keyframes float3{0%,100%{transform:translate(0,0)}50%{transform:translate(-10px,-15px)}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes scaleIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}@keyframes float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-6px)}}*{-webkit-tap-highlight-color:transparent;box-sizing:border-box;}::-webkit-scrollbar{width:0;}input::placeholder{color:rgba(232,238,255,0.25);}select{-webkit-appearance:none;}`}</style></div>;
+}
+Parte 3 de 3 — ÚLTIMA — pega al final:
+function BrandingPanel({ onBack }) {
   const [brand, setBrand] = useState(DB.brand());
   const [tab, setTab] = useState("identity");
   const [toast, setToast] = useState("");
@@ -428,7 +432,7 @@ function ChatApp({ user, onLogout }) {
     const nh = [...history, { role:"user", content:text }];
     setHistory(nh);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", { method:"POST", headers:{ "":"application/json", "x-api-key ":  sk-ant-api03-6AAmOvKyb0Ukt5HvBTNLmhz6jS3M6j20rOMiZ11N7c_bmiifp1XcHzvkNMg67x9T0HrgYF4pXtbA-zKgCBJAHQ-EY9uQQAA", "anthropic-version": "2023-06-01", "anthropic-dangerous-direc-broser-access": "true" }, body:JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2500, system:AI_SYSTEM, messages:nh }) });
+      const res = await fetch("https://api.anthropic.com/v1/messages", { method:"POST", headers:{ "Content-Type":"application/json", "x-api-key":"sk-ant-api03-6AAmOvKyb0Ukt5HvBTNlmhz6jS3M6j20rOMiZ11N7c_bmiifp1XcHzvkNMg67x9T0HrgYF4pXtbA-zKgCBJAHQ-EY9uQQAA", "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" }, body:JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2500, system:AI_SYSTEM, messages:nh }) });
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
       const full = data.content.map(b => b.text||"").join("");
