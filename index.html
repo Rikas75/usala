@@ -304,7 +304,8 @@ function AdminUsers({ onBack }) {
       {toast && <div style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "rgba(5,8,18,0.95)", backdropFilter: "blur(20px)", border: `1px solid ${brand.accent}44`, color: brand.accent, padding: "12px 24px", borderRadius: 50, fontSize: "0.82rem", fontFamily: G.font, fontWeight: 600, zIndex: 998, whiteSpace: "nowrap", animation: "slideUp 0.3s" }}>{toast}</div>}
     </div>
   );
-        }function BrandingPanel({ onBack }) {
+        }
+  function  ({ onBack }) {
   const [brand, setBrand] = useState(DB.brand());
   const [tab, setTab] = useState("identity");
   const [toast, setToast] = useState("");
