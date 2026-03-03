@@ -300,7 +300,6 @@ function AdminUsers({ onBack }) {
     </div>
   );
 }
-Dime cuando esté para la Parte 3 —
 function Pill({ children, color, active, onClick }) {
   const [pressed, setPressed] = useState(false);
   return <button onPointerDown={() => setPressed(true)} onPointerUp={() => setPressed(false)} onPointerLeave={() => setPressed(false)} onClick={onClick} style={{ padding: "8px 16px", borderRadius: 50, border: `1px solid ${active ? color + "88" : G.glassBorder}`, background: active ? `${color}22` : G.glass, color: active ? color : G.dim, fontFamily: G.font, fontSize: "0.78rem", fontWeight: active ? 600 : 400, cursor: "pointer", whiteSpace: "nowrap", transform: pressed ? "scale(0.95)" : "scale(1)", transition: "all 0.15s", flexShrink: 0 }}>{children}</button>;
